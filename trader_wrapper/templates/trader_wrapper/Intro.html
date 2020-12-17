@@ -1,0 +1,42 @@
+{% extends "global/Page.html" %}
+{% load otree static %}
+
+{% block title %}
+    General features of the study
+{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <div class="body">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+
+                </li>
+                <li class="list-group-item">
+                    Thank you for your participation in an economic experiment, in which you have the chance to trade on
+                    a virtual financial market. The experiment is composed of several rounds. In each round, all
+                    monetary values will be expressed in ECUs (Experimental Currency Unit). At the end of the
+                    experiment, one round will be chosen at random to determine your payoff (on top of the participation
+                    credit). For this purpose, ECUs you earned will be converted into Canadian Dollars at the rate of X
+                    CAD/ECU. [The actual number for the exchange rate to be inserted here.] If you ended this randomly
+                    chosen round with a negative payoff, your profit will be considered to be zero.
+                </li>
+                <li class="list-group-item">
+                    The experimental interface has two components (i.e., website tabs). The first tab corresponds to a
+                    trading platform where you can buy and sell virtual assets. In the second tab, you have the
+                    opportunity to perform a simple non-financial task. You can earn ECUs either through profitable
+                    stock trades, or by performing non-financial tasks. You can switch between the two components at any
+                    point throughout a round.
+                </li>
+
+            </ul>
+        </div>
+    </div>
+
+
+
+
+
+    {% next_button %}
+
+{% endblock %}
