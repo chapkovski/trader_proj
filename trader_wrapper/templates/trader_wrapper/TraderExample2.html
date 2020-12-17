@@ -2,11 +2,53 @@
 {% load otree static %}
 
 {% block title %}
-    Page title
+    Trading platform - example 2
 {% endblock %}
 
 {% block content %}
+    <div class="card my-3">
+        <div class="card-body">
+            <div>
+                To understand how trading works on the platform, consider the following example (and figure below). You
+                receive Z=1000 ECU at the beginning of the round. Cash earns an interest rate of 2% each round, and the
+                borrowing rate is 5%. The current stock prices are 5.15 ECU and 7.20 ECU, for stocks A and B,
+                respectively. Stock A (B) has an expected return of 10% (8%)
+                and a volatility of 20% (15%). In the examples, we consider a zero trading fee (f=0).
+            </div>
+            <hr>
+            <div class="lead text-center">
+                Example B: Borrowing
+            </div>
+            <div>
+                At the beginning of the round, you borrow 379 ECU. With the 1379 ECU (the original plus the borrowed
+                amount), you buy 100 stocks A (worth 100 x 5.15 = 515 ECU) and 120 stocks B (worth 120 x 7.20 = 864
+                ECU).
+            </div>
+            <div>
 
+
+                You keep these positions until the end of the round. At that point, the price of Stock A is 4.45 ECU
+                (i.e., lower than before) and the price of stock B is 8.05 ECU (i.e., higher than before).
+            </div>
+            <ul>
+                <li>
+                    Your position in stock A is now worth 100 x 4.45 = 445 ECU: You have lost 70 ECU.
+                </li>
+                <li>
+                    Your position in stock B is now worth 120 x 8.05 = 966 ECU: You have gained 102 ECU.
+                </li>
+                <li>
+                    You have to pay 18.95 ECU interest on your borrowed amount (5% on 379 ECU).
+                </li>
+                <li>
+                    Overall, you earned 13.05 ECU during this round (a return of 1.30%).
+                </li>
+                <li class="text-success">
+                    Your round payoff is 1013.05 ECU.
+                </li>
+            </ul>
+        </div>
+    </div>
     {% next_button %}
 
 {% endblock %}

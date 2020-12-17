@@ -2,10 +2,32 @@ from os import environ
 
 SESSION_CONFIGS = [
     dict(
-       name='trader',
-       display_name="trader - baseline",
-       num_demo_participants=1,
-       app_sequence=['trader']
+        name='baseline',
+        display_name="trader - baseline",
+        num_demo_participants=1,
+        app_sequence=['trader_wrapper']
+    ),
+    dict(
+        name='fin',
+        display_name="trader - financial nudging",
+        num_demo_participants=1,
+        app_sequence=['trader_wrapper'],
+        financial_nudging=True
+    ),
+    dict(
+        name='gamified',
+        display_name="trader - gamified only",
+        num_demo_participants=1,
+        app_sequence=['trader_wrapper'],
+        gamified=True,
+    ),
+    dict(
+        name='full',
+        display_name="trader - gamified + financial nudging",
+        num_demo_participants=1,
+        app_sequence=['trader_wrapper'],
+        gamified=True,
+        financial_nudging=True
     ),
 ]
 

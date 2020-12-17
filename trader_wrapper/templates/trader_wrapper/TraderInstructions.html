@@ -2,11 +2,38 @@
 {% load otree static %}
 
 {% block title %}
-    Page title
+    Instructions - trading platform
 {% endblock %}
 
 {% block content %}
+    <div class="card my-3">
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
 
+                <li class="list-group-item">
+                    At the beginning of each experimental round, you will receive Z ECU that you can either keep as cash
+                    or invest in up to two virtual stocks. At the start of each round, you will receive information
+                    about each stock’s expected rate of return and expected price volatility. Each round lasts for m
+                    minutes.
+                </li>
+                <li class="list-group-item">
+                    Cash earns an interest rate of d% per round (just like a bank account). If you keep cash for a
+                    fraction x of a given round, you will receive x*d% in interest.
+                </li>
+                <li class="list-group-item">
+                    Stock prices are updated every s seconds. You can choose to buy or sell either stock at any point in
+                    time, in any quantity that does not exceed your purchasing power. Each trade incurs a commission of
+                    f, where f varies across rounds.
+                </li>
+                <li class="list-group-item">
+                    You can borrow cash (i.e., leverage), to invest in stocks, at an interest rate b% per round (up to
+                    half of your original endowment Z). Your purchasing power is given by the original cash Z, plus any
+                    amount borrowed.
+                </li>
+
+            </ul>
+        </div>
+    </div>
     {% next_button %}
 
 {% endblock %}

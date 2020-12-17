@@ -17,11 +17,19 @@
             </div>
         </div>
     </div>
+    <div class="text-center my-3">
+        {% if session.config.financial_nudging|default_if_none:False %}
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/-PkN15TtFnc" frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+        {% else %}
 
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/uh-yBJOS5SM" frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+        {% endif %}
 
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/uh-yBJOS5SM" frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen></iframe>
+    </div>
     {% next_button %}
 
 {% endblock %}
