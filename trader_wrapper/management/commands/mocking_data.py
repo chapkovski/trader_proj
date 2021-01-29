@@ -21,10 +21,10 @@ class TabChange(AttrDict):
 
 class Transaction(AttrDict):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, price, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.stock = random.choice(STOCKS)
-        self.price = random.random()
+        self.price = price
         self.event_type = Constants.EVENT_TYPES.transaction
         self.quantity = random.randint(0, 100)
         self.total_amount = self.quantity * self.price
@@ -60,13 +60,14 @@ class Command(BaseCommand):
         length_in_sec = 600
         prob_to_gen = 0.4
         freq_price_update = 5
-
+        cur_price = 0
         for i in range(length_in_sec):
             new_date = start_date + relativedelta(seconds=i)
             new_ev = None
 
             if i % freq_price_update == 0:
                 new_ev = PriceUpdate()
+                cur_price = new_ev.price
 
             else:
                 to_do = random.random() < prob_to_gen
@@ -78,7 +79,7 @@ class Command(BaseCommand):
                     elif what_to_do == Constants.EVENT_TYPES.task_submission:
                         new_ev = TaskSubmission()
                     elif what_to_do == Constants.EVENT_TYPES.transaction:
-                        new_ev = Transaction()
+                        new_ev = Transaction(price=cur_price)
             if new_ev:
                 a = Event.objects.create(**new_ev, timestamp=new_date)
                 print(a, new_ev)
