@@ -1,16 +1,15 @@
 from django.core.management.base import BaseCommand
 import logging
-from trader_wrapper.models import Event, Constants, AttrDict, Player
+from trader_wrapper.models import Event, Constants, AttrDict, Player, EventType, Direction
 from dateparser import parse
 from dateutil.relativedelta import relativedelta
 import random
 from itertools import cycle
 from enum import Enum
+from django.utils import timezone
 
 
-class Direction(int, Enum):
-    buy = 1
-    sell = -1
+
 
 
 logger = logging.getLogger(__name__)
@@ -19,10 +18,6 @@ import pandas as pd
 import numpy as np
 
 
-# creating_events(p)
-# p.age = random.randint(18, 100)
-# p.gender = random.choice(['Male', 'Female'])
-# p.income = random.randint(0, 7)
 def pp(start, end, n):
     """Taken from: https://stackoverflow.com/questions/50559078/generating-random-dates-within-a-given-range-in-pandas.
     Just generate a sorted list of N random timestamps between two dates from two python datetimes"""
@@ -34,8 +29,8 @@ def pp(start, end, n):
 
 class MockPlayer:
     attainable_events = dict(
-        work=['submit_task', 'change_tab'],
-        trade=['change_tab', 'transaction', 'change_stock_tab']
+        work=[EventType.task, EventType.change_tab],
+        trade=[EventType.change_tab, EventType.transaction, EventType.change_stock_tab]
     )
 
     def __init__(self, owner, num_events):
@@ -48,7 +43,7 @@ class MockPlayer:
             self.generate_random_event(i)
 
     def generate_random_event(self, timestamp):
-        self.current_timestamp = timestamp
+        self.current_timestamp = timezone.make_aware(timestamp)
         attainable_tasks = self.attainable_events[self.owner.current_tab]
         ev = random.choice(attainable_tasks)
         params = getattr(self, ev)()
@@ -86,7 +81,7 @@ class MockPlayer:
             if max_q < 1:
                 return
             q = random.randrange(1, max_q) * direction
-        return dict(quantity=q, name=r.name)
+        return dict(quantity=q, name=r.name, direction=direction)
 
     def submit_task(self):
         task = self.owner.get_current_task()
@@ -107,4 +102,4 @@ def creating_events(session):
     for p in session.get_participants():
         pls = Player.objects.filter(participant=p)
         for i in pls:
-            m = MockPlayer(owner=i, num_events=1)
+            m = MockPlayer(owner=i, num_events=100)

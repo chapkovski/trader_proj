@@ -12,11 +12,25 @@ import random
 from django.db import models as djmodels
 from datetime import datetime, timedelta
 from django.utils import timezone
+from enum import Enum
+
 author = 'Philipp Chapkovski, HSE-Moscow'
 
 doc = """
 Backend for trading platform 
 """
+
+
+class EventType(str, Enum):
+    transaction = 'transaction'
+    task = 'submit_task'
+    change_stock_tab = 'change_stock_tab'
+    change_tab = 'change_tab'
+
+
+class Direction(int, Enum):
+    buy = 1
+    sell = -1
 
 
 class AttrDict(dict):
@@ -35,13 +49,6 @@ class Constants(BaseConstants):
     tabs = ['work', 'trade']
     default_tab = 'trade'
     endowment = 100
-    EVENT_TYPES = AttrDict(
-        price_update='PRICE_UPDATE',
-        tab_change='TAB_CHANGE',
-        transaction='TRANSACTION',
-        task_submission='TASK_SUBMITTED',
-
-    )
 
 
 class Subsession(BaseSubsession):
@@ -54,6 +61,7 @@ class Subsession(BaseSubsession):
             p.generate_deposit()  # TODO: in production move to bulk update right here
             p.generate_prices()  # TODO: in production move to bulk update right here
             p.endowment = Constants.endowment  # we may randomize it later, let's keep it simple for now.
+            p.balance = p.endowment
 
 
 class Group(BaseGroup):
@@ -81,8 +89,68 @@ class Player(BasePlayer):
         """That's the main manager that processes all events that arrive from frontend (and from mocking simulator)"""
         # TODO: from frontent apparentley will need to parse the date from string.
         self.events.create(**data)
+        # TODO: we may think to move all this logic beneath to signals. It needs some thinking how
+        # TODO: organize it in a smarter than this way. Right now it is ugly AF
+        event_type = data.get('name')
+        if event_type == EventType.transaction:
+            self.update_stocks_and_balance(data)
+        if event_type == EventType.task:
+            self.update_tasks_and_balance(data)
+        if event_type == EventType.change_stock_tab:
+            self.update_current_stock_tab(data)
+        if event_type == EventType.change_tab:
+            self.update_current_tab(data)
 
-    def get_price(self, stock_name):
+    def update_stocks_and_balance(self, data):
+        direction = data.get('direction')
+        timestamp = data.get('timestamp')
+        quantity = data.get('quantity')
+        stock = self.stocks.get(name=data.get('name'))
+        old_quantity = stock.quantity
+        stock.quantity += quantity
+        stock.save()
+        Event.objects.create(owner=self,
+                             timestamp=timestamp,
+                             name='change_in_deposit',
+                             body=dict(stock_name=stock.name,
+                                       direction=direction,
+                                       old_quantity=old_quantity,
+                                       quantity_to_process=quantity,
+                                       new_quantity=stock.quantity,
+                                       ))
+
+        price = self.get_price(timestamp, stock.name)
+        amount = price * quantity
+        old_balance = self.balance
+        self.balance += amount
+        Event.objects.create(owner=self,
+                             timestamp=timestamp,
+                             name='change_in_balance',
+                             body=dict(
+                                 old_balance=old_balance,
+                                 amount=amount,
+                                 new_balance=self.balance,
+                                 source='trade'
+                             ))
+
+    def update_tasks_and_balance(self, data):
+        pass
+
+    def update_current_stock_tab(self, data):
+        new_stock_tab = data.get('tab_name')
+        self.current_stock_shown = new_stock_tab
+
+    def update_current_tab(self, data):
+        new_tab = data.get('tab_name')
+        self.current_tab = new_tab
+
+    def get_price(self, timestamp, stock_name):
+        current_prices = self.price_request(timestamp=timestamp)
+        for i in current_prices:
+            if i.get('name') == stock_name:
+                return i.get('price')
+
+    def generate_single_price(self, name):
         # TODO: somewhere here we inject proper price generation, right now just a random uniform
         return random.random()
 
@@ -96,7 +164,7 @@ class Player(BasePlayer):
         ps = []
         while t < self.end_time:
             for i in Constants.stocks:
-                ps.append(Price(name=i, price=self.get_price(i), timestamp=t, owner=self))
+                ps.append(Price(name=i, price=self.generate_single_price(i), timestamp=t, owner=self))
             t = t + timedelta(seconds=Constants.tick)
         # TODO: we may limit quantity here for sqlite (it overloads with too long queries)
         Price.objects.bulk_create(ps)
