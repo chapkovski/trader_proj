@@ -5,19 +5,24 @@ from dateparser import parse
 from dateutil.relativedelta import relativedelta
 import random
 from itertools import cycle
+from enum import Enum
+
+
+class Direction(int, Enum):
+    buy = 1
+    sell = -1
+
 
 logger = logging.getLogger(__name__)
-
-STOCKS = ['A', 'B']
-TABS = ['Trade', 'Work']
 
 import pandas as pd
 import numpy as np
 
-creating_events(p)
-p.age = random.randint(18, 100)
-p.gender = random.choice(['Male', 'Female'])
-p.income = random.randint(0, 7)
+
+# creating_events(p)
+# p.age = random.randint(18, 100)
+# p.gender = random.choice(['Male', 'Female'])
+# p.income = random.randint(0, 7)
 def pp(start, end, n):
     """Taken from: https://stackoverflow.com/questions/50559078/generating-random-dates-within-a-given-range-in-pandas.
     Just generate a sorted list of N random timestamps between two dates from two python datetimes"""
@@ -43,38 +48,60 @@ class MockPlayer:
             self.generate_random_event(i)
 
     def generate_random_event(self, timestamp):
+        self.current_timestamp = timestamp
+        attainable_tasks = self.attainable_events[self.owner.current_tab]
+        ev = random.choice(attainable_tasks)
+        params = getattr(self, ev)()
+        # this if condition is only valid for transactions (which can be unattainable due to monetary/depository reasons
+        if params:
+            self.register_event(event_name=ev, params=params)
 
     def register_event(self, event_name, params, ):
-        pass
+        data = dict(event_name=event_name,
+                    params=params,
+                    timestamp=self.current_timestamp)
+        self.owner.register_event(data=data)
 
     def change_tab(self):
-        tab = [t for t in self.tabs if t != self.player.current_tab][0]
-        self.register_event(event_name='change_tab', params={'tab': tab})
+        tab = [t for t in Constants.tabs if t != self.player.current_tab][0]
+        return dict(tab_name=tab)
 
     def transaction(self):
-        self.stock = stock
-        self.price = price
-        self.event_type = Constants.EVENT_TYPES.transaction
-        self.quantity = random.randint(0, 100)
-        self.total_amount = self.quantity * self.price
+        o = self.owner
+        stonks = o.deposit.all()
+        direction = random.choice([Direction.buy, Direction.sell])
+        if direction == Direction.sell:
+            stonks = stonks.filter(quantity__gt=0)
+            # we have nothing to sell - action impossible :( :
+            if not stonks.exists():
+                return
+            r = random.choice(stonks)
+            q = random.randrange(1, r.quantity) * direction
+
+        if direction == Direction.buy:
+            b = o.balance
+            r = random.choice(stonks)
+            p = o.get_price(name=r.name)
+            max_q = b // p
+            if max_q < 1:
+                return
+            q = random.randrange(1, max_q) * direction
+        return dict(quantity=q, name=r.name)
 
 
-class TabChange(AttrDict):
 
-    def __init__(self, tab, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.event_type = Constants.EVENT_TYPES.tab_change
-        self.tab_name = tab
+    def submit_task(self):
+        pass
+
+    def change_stock_tab(self):
+        current_tab = self.owner.current_stock_shown
+        n = [i for i in Constants.stocks if i!=current_tab]
+        return dict(tab_name=n)
 
 
-class Transaction(AttrDict):
-    def __init__(self, price, stock, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.stock = stock
-        self.price = price
-        self.event_type = Constants.EVENT_TYPES.transaction
-        self.quantity = random.randint(0, 100)
-        self.total_amount = self.quantity * self.price
+
+
+
 
 
 class TaskSubmission(AttrDict):
@@ -85,12 +112,6 @@ class TaskSubmission(AttrDict):
         self.is_task_correct = random.choice([True, False])
 
 
-class PriceUpdate(AttrDict):
-    def __init__(self, stock, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.event_type = Constants.EVENT_TYPES.price_update
-        self.stock = stock
-        self.price = random.random()
 
 
 def creating_events(owner):

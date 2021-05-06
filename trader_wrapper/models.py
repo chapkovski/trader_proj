@@ -30,7 +30,10 @@ class Constants(BaseConstants):
     players_per_group = None
     num_rounds = 1
     trading_day_duration = 5  # in minutes
+    tick = 5  # how often prices are updated (in seconds)
     stocks = ['A', 'B', 'ETF_A', 'ETF_B']
+    tabs = ['work', 'trade']
+    default_tab = 'trade'
     endowment = 100
     EVENT_TYPES = AttrDict(
         price_update='PRICE_UPDATE',
@@ -44,10 +47,12 @@ class Constants(BaseConstants):
 class Subsession(BaseSubsession):
     def creating_session(self):
         for p in self.get_players():
-            p.generate_deposit()  # TODO: in production move to bulk update right here
-            p.generate_prices()  # TODO: in production move to bulk update right here
+            p.current_stock_shown = random.choice(Constants.stocks)
+            p.current_tab = Constants.default_tab
             p.start_time = datetime.now()
             p.end_time = p.start_time + timedelta(minutes=Constants.trading_day_duration)
+            p.generate_deposit()  # TODO: in production move to bulk update right here
+            p.generate_prices()  # TODO: in production move to bulk update right here
             p.endowment = Constants.endowment  # we may randomize it later, let's keep it simple for now.
 
 
@@ -72,12 +77,24 @@ class Player(BasePlayer):
     income = models.IntegerField()
 
     ############ END OF: post experimental survey quesitons.  #############################################################
+    def get_price(self, stock_name):
+        # TODO: somewhere here we inject proper price generation, right now just a random uniform
+        return random.random()
+
     def generate_prices(self):
         """we bulk create price updates here.
         The trick is that also in production we pre-generate a flow of prices BEFORE the trading day starts
         with corresponding timestamps. Then we feed them every time we get a price_update request from a client.
         That we guarantee the fastest possible reaction.
         """
+        t = self.start_time
+        ps = []
+        while t < self.end_time:
+            for i in Constants.stocks:
+                ps.append(Price(name=i, price=self.get_price(i), timestamp=t, owner=self))
+            t = t + timedelta(seconds=Constants.tick)
+        # TODO: we may limit quantity here for sqlite (it overloads with too long queries)
+        Price.objects.bulk_create(ps)
 
     def generate_deposit(self):
         """a temporary solution to generate initial set of stocks to keep track of attainability of purchases/sales.
@@ -86,9 +103,8 @@ class Player(BasePlayer):
         """
         for i in Constants.stocks:
             # TODO: bulk creation of Deposits here
-            pass
-
-
+            stonks = [Deposit(name=i, owner=self, quantity=0)]
+            Deposit.objects.bulk_create(stonks)
 
     def latest_timestamp(self):
         """gives a latest possible timestamp"""
