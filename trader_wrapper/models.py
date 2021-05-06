@@ -11,7 +11,7 @@ from otree.api import (
 import random
 from django.db import models as djmodels
 from datetime import datetime, timedelta
-
+from django.utils import timezone
 author = 'Philipp Chapkovski, HSE-Moscow'
 
 doc = """
@@ -49,7 +49,7 @@ class Subsession(BaseSubsession):
         for p in self.get_players():
             p.current_stock_shown = random.choice(Constants.stocks)
             p.current_tab = Constants.default_tab
-            p.start_time = datetime.now()
+            p.start_time = timezone.now()
             p.end_time = p.start_time + timedelta(minutes=Constants.trading_day_duration)
             p.generate_deposit()  # TODO: in production move to bulk update right here
             p.generate_prices()  # TODO: in production move to bulk update right here
@@ -77,6 +77,11 @@ class Player(BasePlayer):
     income = models.IntegerField()
 
     ############ END OF: post experimental survey quesitons.  #############################################################
+    def register_event(self, data):
+        """That's the main manager that processes all events that arrive from frontend (and from mocking simulator)"""
+        # TODO: from frontent apparentley will need to parse the date from string.
+        self.events.create(**data)
+
     def get_price(self, stock_name):
         # TODO: somewhere here we inject proper price generation, right now just a random uniform
         return random.random()
@@ -111,6 +116,22 @@ class Player(BasePlayer):
         # TODO: this one to be used in production to send a signal that session is over
         pass
 
+    def get_current_task(self, timestamp):
+        """TODO: timestamp should be removed in production and substituted by real time"""
+        tasks = self.tasks.filter(answer__isnull=True)
+        if tasks.exists():
+            return tasks.latest()
+        task_body = self.precreating_task(timestamp)
+        t = Task.objects.create(task_body)
+        return t
+
+    def precreating_task(self, t):
+        """TODO: In production returns two"""
+        return dict(body='',
+                    correct_answer='asdf',
+                    timstamp=t,
+                    owner=self)
+
     def price_request(self, timestamp):
         """Returns a dict of recent prices that are earlier than a given timestamp"""
         most_recent_time_stamp = self.prices.filter(timestamp__lte=timestamp).latest()
@@ -135,25 +156,27 @@ class Deposit(djmodels.Model):
     name = models.StringField()
 
 
+class Task(djmodels.Model):
+    class Meta:
+        ordering = ['timestamp']
+
+    owner = djmodels.ForeignKey(to=Player, on_delete=djmodels.CASCADE, related_name='tasks')
+    body = models.StringField()
+    correct_answer = models.StringField()
+    answer = models.StringField()
+    is_correct = models.BooleanField()
+    timestamp = djmodels.DateTimeField(null=True, blank=True)
+
+
 class Event(djmodels.Model):
     class Meta:
         ordering = ['timestamp']
 
     owner = djmodels.ForeignKey(to=Player, on_delete=djmodels.CASCADE, related_name='events')
-    raw = models.LongStringField()
-    event_type = models.StringField()
-    timestamp = djmodels.DateTimeField(null=True, blank=True)
-    stock = models.StringField()
-    quantity = models.FloatField()
-    total_amount = models.FloatField()
-    price = models.FloatField()
-    task = models.LongStringField()
-    answer = models.IntegerField()
-    is_task_correct = models.BooleanField()
-    tab_name = models.StringField()
 
-    def __str__(self):
-        return f'Event type: {self.event_type}'
+    name = models.StringField()
+    timestamp = djmodels.DateTimeField(null=True, blank=True)
+    body = models.StringField()
 
 
 def custom_export(players):

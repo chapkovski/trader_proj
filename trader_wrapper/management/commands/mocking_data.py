@@ -1,92 +1,24 @@
 from django.core.management.base import BaseCommand
 import logging
 from trader_wrapper.models import Event, Constants, AttrDict
+from trader_wrapper.utils import creating_events
 from dateparser import parse
 from dateutil.relativedelta import relativedelta
 import random
-
+from otree.session import create_session
 logger = logging.getLogger(__name__)
-
-STOCKS = ['A', 'B']
-TABS = ['Trade', 'Work']
-
-
-class TabChange(AttrDict):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.event_type = Constants.EVENT_TYPES.tab_change
-        self.tab_name = random.choice(TABS)
-
-
-class Transaction(AttrDict):
-
-    def __init__(self, price, stock, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.stock = stock
-        self.price = price
-        self.event_type = Constants.EVENT_TYPES.transaction
-        self.quantity = random.randint(0, 100)
-        self.total_amount = self.quantity * self.price
-
-
-class TaskSubmission(AttrDict):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.event_type = Constants.EVENT_TYPES.task_submission
-        self.answer = random.randint(1000, 2000)
-        self.is_task_correct = random.choice([True, False])
-
-
-class PriceUpdate(AttrDict):
-    def __init__(self, stock,  *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.event_type = Constants.EVENT_TYPES.price_update
-        self.stock = stock
-        self.price = random.random()
 
 
 class Command(BaseCommand):
-
     def add_arguments(self, parser):
-        pass
+        parser.add_argument('treatment', help='specific treatment name', type=str)
+        parser.add_argument('num_participants', help='How many users to create', type=int)
 
-    def handle(self, *args, **options):
-        logger.info(f'Gonna generate a lot of mocked data in trading platform')
-        start_date_str = '2021-29-01 5:11pm MSK'
-        start_date = parse(start_date_str)
-        TASKS_FOR_RANDOM = [v for k, v in Constants.EVENT_TYPES.items() if k != 'price_update']
-        length_in_sec = 600
-        prob_to_gen = 0.4
-        freq_price_update = 5
-        cur_price = dict(A=0, B=0)
-        for i in range(length_in_sec):
-            new_date = start_date + relativedelta(seconds=i)
-            new_ev = None
-
-            if i % freq_price_update == 0:
-                for s in STOCKS:
-                    new_ev = PriceUpdate(stock=s)
-                    cur_price[s] = new_ev.price
-                    a = Event.objects.create(**new_ev, timestamp=new_date)
-                    print(a, new_ev)
-                continue
-
-
-            else:
-                to_do = random.random() < prob_to_gen
-                if to_do:
-                    what_to_do = random.choice(TASKS_FOR_RANDOM)
-                    if what_to_do == Constants.EVENT_TYPES.tab_change:
-                        new_ev = TabChange()
-
-                    elif what_to_do == Constants.EVENT_TYPES.task_submission:
-                        new_ev = TaskSubmission()
-                    elif what_to_do == Constants.EVENT_TYPES.transaction:
-                        stock = random.choice(STOCKS)
-                        new_ev = Transaction(price=cur_price[stock], stock=stock)
-            if new_ev:
-                a = Event.objects.create(**new_ev, timestamp=new_date)
-                print(a, new_ev)
+    def handle(self,  treatment, num_participants, *args, **options):
+        logger.info(f'Gonna generate a mocked data for trading platform')
+        s = create_session(
+            session_config_name=treatment,
+            num_participants=num_participants,
+        )
+        creating_events(s)
 
