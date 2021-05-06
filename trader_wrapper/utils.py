@@ -8,10 +8,6 @@ from itertools import cycle
 from enum import Enum
 from django.utils import timezone
 
-
-
-
-
 logger = logging.getLogger(__name__)
 
 import pandas as pd
@@ -44,6 +40,7 @@ class MockPlayer:
 
     def generate_random_event(self, timestamp):
         self.current_timestamp = timezone.make_aware(timestamp)
+        print(self.owner.current_tab, 'JOPA')
         attainable_tasks = self.attainable_events[self.owner.current_tab]
         ev = random.choice(attainable_tasks)
         params = getattr(self, ev)()
@@ -59,6 +56,7 @@ class MockPlayer:
 
     def change_tab(self):
         tab = [t for t in Constants.tabs if t != self.owner.current_tab][0]
+        print('GONNA CHANGE THE TAB!', tab)
         return dict(tab_name=tab)
 
     def transaction(self):
@@ -76,7 +74,7 @@ class MockPlayer:
         if direction == Direction.buy:
             b = o.balance
             r = random.choice(stonks)
-            p = o.get_price(name=r.name)
+            p = o.get_price(timestamp=self.current_timestamp, stock_name=r.name)
             max_q = b // p
             if max_q < 1:
                 return
@@ -84,7 +82,7 @@ class MockPlayer:
         return dict(quantity=q, name=r.name, direction=direction)
 
     def submit_task(self):
-        task = self.owner.get_current_task()
+        task = self.owner.get_current_task(self.current_timestamp)
         is_correct = random.choice([False, True])
         if is_correct:
             return dict(answer=task.correct_answer, task_id=task.id)
