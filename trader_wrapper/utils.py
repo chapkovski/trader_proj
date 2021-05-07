@@ -7,7 +7,9 @@ import random
 from itertools import cycle
 from enum import Enum
 from django.utils import timezone
+import pytz
 
+utc = pytz.utc
 logger = logging.getLogger(__name__)
 
 import pandas as pd
@@ -22,8 +24,8 @@ def pp(start, end, n):
     return sorted(pd.to_datetime(
         pd.DatetimeIndex(
             (10 ** 9 * np.random.randint(start_u, end_u, n, dtype=np.int64)).view('M8[ns]'),
-        tz='UTC'),
-        ),
+            tz=utc),
+    ),
     )
 
 
@@ -43,8 +45,11 @@ class MockPlayer:
             self.generate_random_event(i)
 
     def generate_random_event(self, timestamp):
-        self.current_timestamp = timezone.make_aware(timestamp)
-        print(self.owner.current_tab, 'JOPA')
+        if timezone.is_naive(timestamp):
+            timezone.make_aware(timestamp, timezone=utc)
+
+        self.current_timestamp = timestamp
+
         attainable_tasks = self.attainable_events[self.owner.current_tab]
         ev = random.choice(attainable_tasks)
         params = getattr(self, ev)()
@@ -60,7 +65,6 @@ class MockPlayer:
 
     def change_tab(self):
         tab = [t for t in Constants.tabs if t != self.owner.current_tab][0]
-        print('GONNA CHANGE THE TAB!', tab)
         return dict(tab_name=tab)
 
     def transaction(self):
@@ -73,7 +77,7 @@ class MockPlayer:
             if not stonks.exists():
                 return
             r = random.choice(stonks)
-            q = random.randrange(1, r.quantity) * direction
+            q = random.randint(1, r.quantity) * direction
 
         if direction == Direction.buy:
             b = o.balance
@@ -82,7 +86,7 @@ class MockPlayer:
             max_q = b // p
             if max_q < 1:
                 return
-            q = random.randrange(1, max_q) * direction
+            q = random.randint(1, max_q) * direction
         return dict(quantity=q, name=r.name, direction=direction)
 
     def submit_task(self):
@@ -95,7 +99,7 @@ class MockPlayer:
 
     def change_stock_tab(self):
         current_tab = self.owner.current_stock_shown
-        n = [i for i in Constants.stocks if i != current_tab]
+        n = random.choice([i for i in Constants.stocks if i != current_tab])
         return dict(tab_name=n)
 
 

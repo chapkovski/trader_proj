@@ -1,5 +1,5 @@
 from os import environ
-
+TIME_ZONE = 'UTC'
 SESSION_CONFIGS = [
     dict(
         name='baseline',
