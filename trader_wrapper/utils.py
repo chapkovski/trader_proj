@@ -20,7 +20,11 @@ def pp(start, end, n):
     start_u = pd.Timestamp(start).value // 10 ** 9
     end_u = pd.Timestamp(end).value // 10 ** 9
     return sorted(pd.to_datetime(
-        pd.DatetimeIndex((10 ** 9 * np.random.randint(start_u, end_u, n, dtype=np.int64)).view('M8[ns]'))))
+        pd.DatetimeIndex(
+            (10 ** 9 * np.random.randint(start_u, end_u, n, dtype=np.int64)).view('M8[ns]'),
+        tz='UTC'),
+        ),
+    )
 
 
 class MockPlayer:
