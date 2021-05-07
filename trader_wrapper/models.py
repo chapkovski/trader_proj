@@ -13,7 +13,7 @@ from django.db import models as djmodels
 from datetime import datetime, timedelta
 from django.utils import timezone
 from enum import Enum
-
+from dateutil.relativedelta import relativedelta
 author = 'Philipp Chapkovski, HSE-Moscow'
 
 doc = """
@@ -123,18 +123,19 @@ class Player(BasePlayer):
         old_quantity = stock.quantity
         stock.quantity += quantity
         stock.save()
+        price = self.get_price(timestamp, stock.name)
         Event.objects.create(owner=self,
                              timestamp=timestamp,
                              source=SourceType.inner,
                              name='change_in_deposit',
                              body=dict(stock_name=stock.name,
                                        direction=direction,
+                                       price=price,
                                        old_quantity=old_quantity,
                                        quantity_to_process=quantity,
                                        new_quantity=stock.quantity,
                                        ))
 
-        price = self.get_price(timestamp, stock.name)
         # we invert direction here because selling and buying affects balance in an inverted way (obviosly)
         amount = -1 * price * quantity
         old_balance = self.balance
@@ -227,7 +228,7 @@ class Player(BasePlayer):
         while t < self.end_time:
             for i in Constants.stocks:
                 ps.append(Price(name=i, price=self.generate_single_price(i), timestamp=t, owner=self))
-            t = t + timedelta(seconds=Constants.tick)
+            t = t + relativedelta(seconds=Constants.tick)
         # TODO: we may limit quantity here for sqlite (it overloads with too long queries)
         Price.objects.bulk_create(ps)
         # TODO: we seriously need to think whether we want to register these events in advance in production
@@ -273,7 +274,19 @@ class Player(BasePlayer):
 
     def price_request(self, timestamp):
         """Returns a dict of recent prices that are earlier than a given timestamp"""
-        most_recent_time_stamp = self.prices.filter(timestamp__lte=timestamp).latest().timestamp
+        try:
+            most_recent_time_stamp = self.prices.filter(timestamp__lte=timestamp).latest().timestamp
+        except Price.DoesNotExist:
+            print("WHEN DO WE START?", self.start_time)
+            print("WHEN DO WE END?", self.end_time)
+            print('TIMESAMP:', timestamp)
+            print('TIMESAMP ZONE:', timestamp.tzinfo)
+            print("AVAILABLE:", self.prices.filter(timestamp__lte=timestamp))
+            print('all data:')
+            # for i in self.prices.all():
+            #     print(i.timestamp)
+            import sys
+            sys.exit()
         # we use here the fact N stock prices are pre-created in waves in groups of 4
         # TODO: somewhere here in production we should check that the trading session is not over
         return self.prices.filter(timestamp=most_recent_time_stamp).values('name', 'price', 'timestamp')
@@ -322,9 +335,25 @@ class Event(djmodels.Model):
 def custom_export(players):
     all_fields = Event._meta.get_fields()
     field_names = [i.name for i in all_fields]
-    player_fields = ['participant_code', 'age', 'gender', 'income', 'session_code', 'treatment']
+
+    player_fields = ['participant_code',
+                     'trading_session_starts',
+                     'trading_session_ends',
+                     'age', 'gender', 'income', 'balance',
+                     'num_tasks_submitted',
+                     'num_correct_tasks_submitted',
+                     'session_code', 'treatment']
     yield field_names + player_fields
-    for q in Event.objects.order_by('id'):
-        yield [getattr(q, f) or '' for f in field_names] + [q.owner.participant.code, q.owner.age, q.owner.gender,
-                                                            q.owner.income, q.owner.session.code,
+    for q in Event.objects.all():
+        yield [getattr(q, f) or '' for f in field_names] + [q.owner.participant.code,
+                                                            q.owner.start_time,
+                                                            q.owner.end_time,
+                                                            q.owner.age,
+                                                            q.owner.gender,
+                                                            q.owner.income,
+                                                            q.owner.balance,
+                                                            q.owner.num_tasks_submitted,
+                                                            q.owner.num_correct_tasks_submitted,
+                                                            q.owner.session.code,
+
                                                             q.owner.session.config.get('display_name')]

@@ -19,13 +19,13 @@ import numpy as np
 def pp(start, end, n):
     """Taken from: https://stackoverflow.com/questions/50559078/generating-random-dates-within-a-given-range-in-pandas.
     Just generate a sorted list of N random timestamps between two dates from two python datetimes"""
-    start_u = pd.Timestamp(start).value // 10 ** 9
-    end_u = pd.Timestamp(end).value // 10 ** 9
+    start_u = pd.Timestamp(start).value // 10 ** 6
+    end_u = pd.Timestamp(end).value // 10 ** 6
     return sorted(pd.to_datetime(
         pd.DatetimeIndex(
-            (10 ** 9 * np.random.randint(start_u, end_u, n, dtype=np.int64)).view('M8[ns]'),
-            tz=utc),
-    ),
+            (10 ** 6 * np.random.randint(start_u, end_u, n, dtype=np.int64)).view('M8[ns]'),
+            tz=utc, ),
+        unit='ms'),
     )
 
 
@@ -108,4 +108,8 @@ def creating_events(session):
     for p in session.get_participants():
         pls = Player.objects.filter(participant=p)
         for i in pls:
-            m = MockPlayer(owner=i, num_events=100)
+            i.age = random.randint(18, 100)
+            i.gender = random.choice(['Male', 'Female'])
+            i.income = random.randint(0, 7)
+            nevents = random.randint(50, 100)
+            m = MockPlayer(owner=i, num_events=nevents)
