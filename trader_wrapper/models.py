@@ -14,6 +14,9 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from enum import Enum
 from dateutil.relativedelta import relativedelta
+from .prices import get_prices
+import json
+
 author = 'Philipp Chapkovski, HSE-Moscow'
 
 doc = """
@@ -55,6 +58,27 @@ class Constants(BaseConstants):
     default_tab = 'trade'
     endowment = 100
     fee_per_task = 10
+    stocks_with_params = [
+        dict(name='A',
+             initial=100,
+             sigma=0.2,
+             leverage=1),
+        dict(name='B',
+             initial=100,
+             sigma=0.4,
+             leverage=1
+             ),
+        dict(name='ETF_A',
+             initial=100,
+             sigma=0.2,
+             leverage=3
+             ),
+        dict(name='ETF_B',
+             initial=100,
+             sigma=0.4,
+             leverage=3
+             ),
+    ]
 
 
 class Subsession(BaseSubsession):
@@ -128,13 +152,13 @@ class Player(BasePlayer):
                              timestamp=timestamp,
                              source=SourceType.inner,
                              name='change_in_deposit',
-                             body=dict(stock_name=stock.name,
-                                       direction=direction,
-                                       price=price,
-                                       old_quantity=old_quantity,
-                                       quantity_to_process=quantity,
-                                       new_quantity=stock.quantity,
-                                       ))
+                             body=json.dumps(dict(stock_name=stock.name,
+                                                  direction=direction,
+                                                  price=price,
+                                                  old_quantity=old_quantity,
+                                                  quantity_to_process=quantity,
+                                                  new_quantity=stock.quantity,
+                                                  )))
 
         # we invert direction here because selling and buying affects balance in an inverted way (obviosly)
         amount = -1 * price * quantity
@@ -145,12 +169,12 @@ class Player(BasePlayer):
                              timestamp=timestamp,
                              source=SourceType.inner,
                              name='change_in_balance',
-                             body=dict(
+                             body=json.dumps(dict(
                                  old_balance=old_balance,
                                  amount=amount,
                                  new_balance=self.balance,
                                  source='trade'
-                             ))
+                             )))
 
     def update_tasks_and_balance(self, data):
         body = data.get('body')
@@ -166,12 +190,12 @@ class Player(BasePlayer):
                              timestamp=timestamp,
                              name='task_submitted',
                              source=SourceType.inner,
-                             body=dict(
+                             body=json.dumps(dict(
                                  answer=task.answer,
                                  is_correct=task.is_correct,
                                  num_tasks_submitted=self.num_tasks_submitted,
                                  num_correct_tasks_submitted=self.num_correct_tasks_submitted,
-                             ))
+                             )))
 
         if task.is_correct:
             price = Constants.fee_per_task
@@ -182,21 +206,21 @@ class Player(BasePlayer):
                                  timestamp=timestamp,
                                  source=SourceType.inner,
                                  name='change_in_balance',
-                                 body=dict(
+                                 body=json.dumps(dict(
                                      old_balance=old_balance,
                                      amount=amount,
                                      new_balance=self.balance,
                                      source='work'
-                                 ))
+                                 )))
         new_task = self.get_current_task(timestamp=timestamp)
         Event.objects.create(owner=self,
                              timestamp=timestamp,
                              name='new_task_generated',
                              source=SourceType.inner,
-                             body=dict(
+                             body=json.dumps(dict(
                                  id=new_task.id,
                                  correct_answer=new_task.correct_answer
-                             ))
+                             )))
 
     def update_current_stock_tab(self, data):
         new_stock_tab = data.get('tab_name')
@@ -223,22 +247,38 @@ class Player(BasePlayer):
         with corresponding timestamps. Then we feed them every time we get a price_update request from a client.
         That we guarantee the fastest possible reaction.
         """
+
+        # TODO: NB! that obviosly should be used detached from the timestamp because we don't know
+        #  when the player actually arrives to the corresponding page. however for mock generating reasons
+        #  it's ok to keep it like that for now.
+
+        # TODO: all this BS should be optimized for production.
         t = self.start_time
-        ps = []
+        times = []
         while t < self.end_time:
-            for i in Constants.stocks:
-                ps.append(Price(name=i, price=self.generate_single_price(i), timestamp=t, owner=self))
+            times.append(t)
             t = t + relativedelta(seconds=Constants.tick)
-        # TODO: we may limit quantity here for sqlite (it overloads with too long queries)
+        n = len(times)
+        stocks_with_prices = get_prices(Constants.stocks_with_params, n)
+
+        ps = []
+        for i in stocks_with_prices:
+            for j, p in enumerate(i.get('prices')):
+                t = times[j]
+                ps.append(Price(price=p, timestamp=t, name=i.get('name'), owner=self))
+
+        # TODO: we may limit quantity here with `batch_size` for sqlite (it overloads with too long queries)
         Price.objects.bulk_create(ps)
         # TODO: we seriously need to think whether we want to register these events in advance in production
+        #  we can't do this tbh because we don't know exact timestamps of the starting time.
+        #  That works for mocked data only.
         events = []
         for p in ps:
             events.append(Event(owner=self, source=SourceType.inner,
                                 name='price_update',
                                 timestamp=p.timestamp,
-                                body=dict(stock_name=p.name, new_stock_price=p.price)
-                                ))
+                                body=json.dumps(dict(stock_name=p.name, new_stock_price=p.price)
+                                                )))
         Event.objects.bulk_create(events)
 
     def generate_deposit(self):
@@ -300,6 +340,9 @@ class Price(djmodels.Model):
     price = models.FloatField()
     timestamp = djmodels.DateTimeField(null=True, blank=True)
     owner = djmodels.ForeignKey(to=Player, on_delete=djmodels.CASCADE, related_name='prices')
+
+    def __str__(self):
+        return f'Price {self.name}: price: {self.price}; timestamp: {self.timestamp}'
 
 
 class Deposit(djmodels.Model):

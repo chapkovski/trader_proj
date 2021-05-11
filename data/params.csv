@@ -1,0 +1,5 @@
+param,value,comment
+r,0.1,risk-free rate
+sigma,0.2,stock volatility
+pi,0.2,Sharpe ratio of the stock
+u,5,leverage ratio
