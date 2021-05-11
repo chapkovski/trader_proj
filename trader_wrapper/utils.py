@@ -80,7 +80,7 @@ class MockPlayer:
             q = random.randint(1, r.quantity) * direction
 
         if direction == Direction.buy:
-            b = o.balance
+            b = o.ending_balance
             r = random.choice(stonks)
             p = o.get_price(timestamp=self.current_timestamp, stock_name=r.name)
             max_q = b // p
@@ -106,10 +106,14 @@ class MockPlayer:
 def creating_events(session):
     logger.info(f'Gonna generate a mocked data in trading platform for session {session.code}')
     for p in session.get_participants():
+        age = random.randint(18, 100)
+        gender = random.choice(['Male', 'Female'])
+        income = random.randint(0, 7)
+
         pls = Player.objects.filter(participant=p)
         for i in pls:
-            i.age = random.randint(18, 100)
-            i.gender = random.choice(['Male', 'Female'])
-            i.income = random.randint(0, 7)
+            i.age = age
+            i.gender = gender
+            i.income = income
             nevents = random.randint(50, 100)
             m = MockPlayer(owner=i, num_events=nevents)

@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 import logging
-from trader_wrapper.models import Event, Constants, AttrDict
+from trader_wrapper.models import Event, Constants, AttrDict, UpdSession
 from trader_wrapper.utils import creating_events
 from dateparser import parse
 from dateutil.relativedelta import relativedelta
@@ -21,4 +21,6 @@ class Command(BaseCommand):
             num_participants=num_participants,
         )
         creating_events(s)
+        u = UpdSession(code=s.code)
+        print(u.export_data())
 

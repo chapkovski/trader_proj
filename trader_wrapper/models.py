@@ -8,6 +8,7 @@ from otree.api import (
     Currency as c,
     currency_range,
 )
+from otree.models import Session
 import random
 from django.db import models as djmodels
 from datetime import datetime, timedelta
@@ -15,13 +16,31 @@ from django.utils import timezone
 from enum import Enum
 from dateutil.relativedelta import relativedelta
 from .prices import get_prices
-import json
+import os
+import csv
 
 author = 'Philipp Chapkovski, HSE-Moscow'
 
 doc = """
 Backend for trading platform 
 """
+
+
+class UpdSession(Session):
+    class Meta:
+        proxy = True
+
+    def export_data(self):
+        # TODO: this function should  write files to S3 (preferrably)
+        origin = Session.objects.get(code=self.code).config
+
+        ps = Player.objects.filter(session__code=self.code)
+        export_path = datetime.now().strftime('__temp_mock_%m_%d_%Y')
+
+        os.makedirs(export_path, exist_ok=True)
+        with open(f'{export_path}/{origin.get("name")}_{self.code}.tsv', "w") as file1:
+            writes = csv.writer(file1, delimiter='\t', quoting=csv.QUOTE_ALL)
+            writes.writerows(custom_export(ps))
 
 
 class EventType(str, Enum):
@@ -50,7 +69,6 @@ class AttrDict(dict):
 class Constants(BaseConstants):
     name_in_url = 'trader_wrapper'
     players_per_group = None
-    num_rounds = 1
     trading_day_duration = 5  # in minutes
     tick = 5  # how often prices are updated (in seconds)
     stocks = ['A', 'B', 'ETF_A', 'ETF_B']
@@ -58,23 +76,26 @@ class Constants(BaseConstants):
     default_tab = 'trade'
     endowment = 100
     fee_per_task = 10
+    fees = [5, 10, 15, 20, 25, 30, 50, 75]
+    num_rounds = len(fees)
+
     stocks_with_params = [
         dict(name='A',
-             initial=100,
+             initial=1,
              sigma=0.2,
              leverage=1),
         dict(name='B',
-             initial=100,
+             initial=1,
              sigma=0.4,
              leverage=1
              ),
         dict(name='ETF_A',
-             initial=100,
+             initial=1,
              sigma=0.2,
              leverage=3
              ),
         dict(name='ETF_B',
-             initial=100,
+             initial=1,
              sigma=0.4,
              leverage=3
              ),
@@ -91,7 +112,9 @@ class Subsession(BaseSubsession):
             p.generate_deposit()  # TODO: in production move to bulk update right here
             p.generate_prices()  # TODO: in production move to bulk update right here
             p.endowment = Constants.endowment  # we may randomize it later, let's keep it simple for now.
-            p.balance = p.endowment
+            p.starting_balance = p.endowment
+            p.ending_balance = p.endowment
+            p.work_fee = Constants.fees[self.round_number - 1]
 
 
 class Group(BaseGroup):
@@ -107,7 +130,10 @@ class Player(BasePlayer):
     current_stock_shown = models.StringField(doc='registers сurrent stock shown to a player')
     current_tab = models.StringField(doc='registers current tab the player is it')
     endowment = models.FloatField(doc='initial amount given to a participant at the beginning of the trading day')
-    balance = models.FloatField(doc='to store the current state of bank account')
+    starting_balance = models.FloatField(doc='to store the initial state of bank account')
+    ending_balance = models.FloatField(
+        doc='to store the final (for a specific trading day  aka round) state of bank account')
+    work_fee = models.FloatField(doc='How much they earn for submitting the correct fee')
     num_tasks_submitted = models.IntegerField(doc='to store number of total tasks submitted', initial=0)
     num_correct_tasks_submitted = models.IntegerField(doc='to store number of correct tasks submitted',
                                                       initial=0)
@@ -135,6 +161,7 @@ class Player(BasePlayer):
             self.update_current_stock_tab(data)
         if event_type == EventType.change_tab:
             self.update_current_tab(data)
+        self.save()  # we only need this in mocking, but no harm in production
         # TODO - we need to return something to front here in production. No need to this for mocking data though
 
     def update_stocks_and_balance(self, data):
@@ -152,29 +179,30 @@ class Player(BasePlayer):
                              timestamp=timestamp,
                              source=SourceType.inner,
                              name='change_in_deposit',
-                             body=json.dumps(dict(stock_name=stock.name,
-                                                  direction=direction,
-                                                  price=price,
-                                                  old_quantity=old_quantity,
-                                                  quantity_to_process=quantity,
-                                                  new_quantity=stock.quantity,
-                                                  )))
+                             body=dict(stock_name=stock.name,
+                                       direction=direction,
+                                       price=price,
+                                       old_quantity=old_quantity,
+                                       quantity_to_process=quantity,
+                                       new_quantity=stock.quantity,
+                                       ))
 
         # we invert direction here because selling and buying affects balance in an inverted way (obviosly)
         amount = -1 * price * quantity
-        old_balance = self.balance
-        self.balance += amount
+        old_balance = self.ending_balance
+        self.ending_balance += amount
 
         Event.objects.create(owner=self,
                              timestamp=timestamp,
                              source=SourceType.inner,
                              name='change_in_balance',
-                             body=json.dumps(dict(
+                             balance=self.ending_balance,
+                             body=dict(
                                  old_balance=old_balance,
                                  amount=amount,
-                                 new_balance=self.balance,
+                                 new_balance=self.ending_balance,
                                  source='trade'
-                             )))
+                             ))
 
     def update_tasks_and_balance(self, data):
         body = data.get('body')
@@ -190,37 +218,38 @@ class Player(BasePlayer):
                              timestamp=timestamp,
                              name='task_submitted',
                              source=SourceType.inner,
-                             body=json.dumps(dict(
+                             body=dict(
                                  answer=task.answer,
                                  is_correct=task.is_correct,
                                  num_tasks_submitted=self.num_tasks_submitted,
                                  num_correct_tasks_submitted=self.num_correct_tasks_submitted,
-                             )))
+                             ))
 
         if task.is_correct:
-            price = Constants.fee_per_task
+            price = self.work_fee
             amount = price * task.is_correct
-            old_balance = self.balance
-            self.balance += amount
+            old_balance = self.ending_balance
+            self.ending_balance += amount
             Event.objects.create(owner=self,
                                  timestamp=timestamp,
                                  source=SourceType.inner,
                                  name='change_in_balance',
-                                 body=json.dumps(dict(
+                                 balance=self.ending_balance,
+                                 body=dict(
                                      old_balance=old_balance,
                                      amount=amount,
-                                     new_balance=self.balance,
+                                     new_balance=self.ending_balance,
                                      source='work'
-                                 )))
+                                 ))
         new_task = self.get_current_task(timestamp=timestamp)
         Event.objects.create(owner=self,
                              timestamp=timestamp,
                              name='new_task_generated',
                              source=SourceType.inner,
-                             body=json.dumps(dict(
+                             body=dict(
                                  id=new_task.id,
                                  correct_answer=new_task.correct_answer
-                             )))
+                             ))
 
     def update_current_stock_tab(self, data):
         new_stock_tab = data.get('tab_name')
@@ -277,8 +306,8 @@ class Player(BasePlayer):
             events.append(Event(owner=self, source=SourceType.inner,
                                 name='price_update',
                                 timestamp=p.timestamp,
-                                body=json.dumps(dict(stock_name=p.name, new_stock_price=p.price)
-                                                )))
+                                body=dict(stock_name=p.name, new_stock_price=p.price)
+                                ))
         Event.objects.bulk_create(events)
 
     def generate_deposit(self):
@@ -373,28 +402,37 @@ class Event(djmodels.Model):
     name = models.StringField()
     timestamp = djmodels.DateTimeField(null=True, blank=True)
     body = models.StringField()
+    balance = models.FloatField()  # to store the current state of bank account
 
 
 def custom_export(players):
+    session = players[0].session
     all_fields = Event._meta.get_fields()
     field_names = [i.name for i in all_fields]
 
     player_fields = ['participant_code',
+                     'trading_day',
                      'trading_session_starts',
                      'trading_session_ends',
-                     'age', 'gender', 'income', 'balance',
+                     'age', 'gender', 'income', 'starting_balance',
+                     'ending_balance',
+                     'work_fee',
                      'num_tasks_submitted',
                      'num_correct_tasks_submitted',
                      'session_code', 'treatment']
     yield field_names + player_fields
-    for q in Event.objects.all():
+    for q in Event.objects.filter(owner__session=session).order_by('owner__session', 'owner__round_number',
+                                                                   'timestamp'):
         yield [getattr(q, f) or '' for f in field_names] + [q.owner.participant.code,
+                                                            q.owner.round_number,
                                                             q.owner.start_time,
                                                             q.owner.end_time,
                                                             q.owner.age,
                                                             q.owner.gender,
                                                             q.owner.income,
-                                                            q.owner.balance,
+                                                            q.owner.starting_balance,
+                                                            q.owner.ending_balance,
+                                                            q.owner.work_fee,
                                                             q.owner.num_tasks_submitted,
                                                             q.owner.num_correct_tasks_submitted,
                                                             q.owner.session.code,
