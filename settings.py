@@ -8,6 +8,7 @@ SESSION_CONFIGS = [
         num_demo_participants=1,
         app_sequence=['trader_wrapper'],
         gamified=False,
+
     ),
 
     dict(

@@ -18,6 +18,7 @@ from dateutil.relativedelta import relativedelta
 from .prices import get_prices
 import os
 import csv
+from itertools import product
 
 author = 'Philipp Chapkovski, HSE-Moscow'
 
@@ -75,10 +76,12 @@ class Constants(BaseConstants):
     tabs = ['work', 'trade']
     default_tab = 'trade'
     endowment = 100
-    fee_per_task = 10
-    fees = [5, 10, 15, 20, 25, 30, 50, 75]
-    num_rounds = len(fees)
 
+    num_rounds = 8
+    wages = [10, 20]
+    fees = [0, 1]
+    wages_fees = list(product(wages, fees))
+    assert num_rounds == len(wages_fees) * 2, 'Something is wrong with logic in wages/fees'
     stocks_with_params = [
         dict(name='A',
              initial=1,
@@ -100,21 +103,35 @@ class Constants(BaseConstants):
              leverage=3
              ),
     ]
-
+    awards = {1: dict(name='First transaction',
+                      message='Hooray! you have made your first transaction!'),
+              3: dict(name='Bronze', message='Three transactions! That\'s the spirit!'),
+              5: dict(name='Silver', message='Incredible, George Soros wishes you luck!'),
+              10: dict(name='Gold', message='Warren Buffet envies you!')}
 
 class Subsession(BaseSubsession):
     def creating_session(self):
+        if self.round_number == 1:
+            for p in self.session.get_participants():
+                wages_fees = [val for val in Constants.wages_fees for _ in (0, 1)]
+                p.vars['wages_fees'] = wages_fees
+
         for p in self.get_players():
             p.current_stock_shown = random.choice(Constants.stocks)
             p.current_tab = Constants.default_tab
-            p.start_time = timezone.now()
+            if self.round_number == 1:
+                p.start_time = timezone.now()
+            else:
+                p.start_time = p.in_round(self.round_number - 1).end_time + timedelta(seconds=30)
             p.end_time = p.start_time + timedelta(minutes=Constants.trading_day_duration)
             p.generate_deposit()  # TODO: in production move to bulk update right here
             p.generate_prices()  # TODO: in production move to bulk update right here
             p.endowment = Constants.endowment  # we may randomize it later, let's keep it simple for now.
             p.starting_balance = p.endowment
             p.ending_balance = p.endowment
-            p.work_fee = Constants.fees[self.round_number - 1]
+            # the below thing is ugly AF, but tbh i dont care
+            p.wage = p.participant.vars.get('wages_fees')[p.round_number - 1][0]
+            p.transaction_fee = p.participant.vars.get('wages_fees')[p.round_number - 1][1]
 
 
 class Group(BaseGroup):
@@ -133,7 +150,8 @@ class Player(BasePlayer):
     starting_balance = models.FloatField(doc='to store the initial state of bank account')
     ending_balance = models.FloatField(
         doc='to store the final (for a specific trading day  aka round) state of bank account')
-    work_fee = models.FloatField(doc='How much they earn for submitting the correct fee')
+    wage = models.FloatField(doc='How much they earn for submitting the correct fee')
+    transaction_fee = models.FloatField(doc='Transaction fee per trade')
     num_tasks_submitted = models.IntegerField(doc='to store number of total tasks submitted', initial=0)
     num_correct_tasks_submitted = models.IntegerField(doc='to store number of correct tasks submitted',
                                                       initial=0)
@@ -203,6 +221,38 @@ class Player(BasePlayer):
                                  new_balance=self.ending_balance,
                                  source='trade'
                              ))
+        if self.transaction_fee and self.transaction_fee > 0:
+            # TODO: do we need that? for speed let's keep like that for a moment
+            self.update_balance_and_register_fee(timestamp)
+        # TODO: in production some awards (based on time spent) are given in front, not inner
+        # TODO: if the award is inner-generated then we need to return something here to give info to front
+        self.assign_awards(timestamp)
+
+    def assign_awards(self, timestamp):
+        n_transactions = self.events.filter(name='transaction').count()
+        award = Constants.awards.get(n_transactions)
+        if award:
+            event = Event.objects.create(owner=self,
+                                 timestamp=timestamp,
+                                 source=SourceType.inner,
+                                 name='award',
+                                 body=award)
+            return event
+    def update_balance_and_register_fee(self, timestamp):
+        old_balance = self.ending_balance
+        self.ending_balance -= self.transaction_fee
+
+        Event.objects.create(owner=self,
+                             timestamp=timestamp,
+                             source=SourceType.inner,
+                             name='change_in_balance',
+                             balance=self.ending_balance,
+                             body=dict(
+                                 old_balance=old_balance,
+                                 amount=self.transaction_fee,
+                                 new_balance=self.ending_balance,
+                                 source='transaction_fee'
+                             ))
 
     def update_tasks_and_balance(self, data):
         body = data.get('body')
@@ -226,7 +276,7 @@ class Player(BasePlayer):
                              ))
 
         if task.is_correct:
-            price = self.work_fee
+            price = self.wage
             amount = price * task.is_correct
             old_balance = self.ending_balance
             self.ending_balance += amount
@@ -343,19 +393,8 @@ class Player(BasePlayer):
 
     def price_request(self, timestamp):
         """Returns a dict of recent prices that are earlier than a given timestamp"""
-        try:
-            most_recent_time_stamp = self.prices.filter(timestamp__lte=timestamp).latest().timestamp
-        except Price.DoesNotExist:
-            print("WHEN DO WE START?", self.start_time)
-            print("WHEN DO WE END?", self.end_time)
-            print('TIMESAMP:', timestamp)
-            print('TIMESAMP ZONE:', timestamp.tzinfo)
-            print("AVAILABLE:", self.prices.filter(timestamp__lte=timestamp))
-            print('all data:')
-            # for i in self.prices.all():
-            #     print(i.timestamp)
-            import sys
-            sys.exit()
+
+        most_recent_time_stamp = self.prices.filter(timestamp__lte=timestamp).latest().timestamp
         # we use here the fact N stock prices are pre-created in waves in groups of 4
         # TODO: somewhere here in production we should check that the trading session is not over
         return self.prices.filter(timestamp=most_recent_time_stamp).values('name', 'price', 'timestamp')
@@ -411,12 +450,14 @@ def custom_export(players):
     field_names = [i.name for i in all_fields]
 
     player_fields = ['participant_code',
-                     'trading_day',
-                     'trading_session_starts',
-                     'trading_session_ends',
-                     'age', 'gender', 'income', 'starting_balance',
+                     'round_number',
+                     'trading_round_starts',
+                     'trading_round_ends',
+                     'age', 'gender', 'income',
+                     'starting_balance',
                      'ending_balance',
-                     'work_fee',
+                     'wage',
+                     'transaction_fee',
                      'num_tasks_submitted',
                      'num_correct_tasks_submitted',
                      'session_code', 'treatment']
@@ -432,7 +473,8 @@ def custom_export(players):
                                                             q.owner.income,
                                                             q.owner.starting_balance,
                                                             q.owner.ending_balance,
-                                                            q.owner.work_fee,
+                                                            q.owner.wage,
+                                                            q.owner.transaction_fee,
                                                             q.owner.num_tasks_submitted,
                                                             q.owner.num_correct_tasks_submitted,
                                                             q.owner.session.code,
