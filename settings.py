@@ -1,34 +1,23 @@
 from os import environ
+
 TIME_ZONE = 'UTC'
 SESSION_CONFIGS = [
     dict(
         name='baseline',
         display_name="trader - baseline",
         num_demo_participants=1,
-        app_sequence=['trader_wrapper']
-    ),
-    dict(
-        name='fin',
-        display_name="trader - financial nudging",
-        num_demo_participants=1,
         app_sequence=['trader_wrapper'],
-        financial_nudging=True
+        gamified=False,
     ),
+
     dict(
         name='gamified',
-        display_name="trader - gamified only",
+        display_name="trader - gamified",
         num_demo_participants=1,
         app_sequence=['trader_wrapper'],
         gamified=True,
     ),
-    dict(
-        name='full',
-        display_name="trader - gamified + financial nudging",
-        num_demo_participants=1,
-        app_sequence=['trader_wrapper'],
-        gamified=True,
-        financial_nudging=True
-    ),
+
 ]
 
 # if you set a property in SESSION_CONFIG_DEFAULTS, it will be inherited by all configs
