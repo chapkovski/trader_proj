@@ -1,12 +1,14 @@
 {% extends "global/Page.html" %}
 {% load otree static %}
 
-{% block title %}
-    Trader itself goes here
-{% endblock %}
+{% load render_bundle from webpack_loader %}
 
-{% block content %}
 
-    {% next_button %}
+{% block body_main %}
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <div id="app"></div>
+    {% render_bundle "chunk-vendors" %}
+    {% render_bundle "app" %}
+
 
 {% endblock %}

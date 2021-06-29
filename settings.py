@@ -1,5 +1,6 @@
 from os import environ
-
+import os
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TIME_ZONE = 'UTC'
 SESSION_CONFIGS = [
     dict(
@@ -47,4 +48,13 @@ DEMO_PAGE_INTRO_HTML = """ """
 SECRET_KEY = 'y(8c37tkwqf#m$gg9=z*54k&jojh6ddhlj75j4klo6evkkfwb%'
 
 # if an app is included in SESSION_CONFIGS, you don't need to list it here
-INSTALLED_APPS = ['otree']
+INSTALLED_APPS = [
+    'otree',
+    'webpack_loader',
+]
+
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'STATS_FILE': os.path.join(BASE_DIR, 'traderfront', 'webpack-stats.json'),
+    }
+}
