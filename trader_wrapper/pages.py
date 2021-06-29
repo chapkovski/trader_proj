@@ -22,19 +22,28 @@ class TraderExample2(Page):
 class RETInstructions(Page):
     pass
 
+
 class ComprehensionCheck(Page):
     pass
 
+
 class Video(Page):
     pass
+
 
 class VideoQuiz(Page):
     pass
 
 
 class Trader(Page):
-    pass
-
+    def game_params(self):
+        return dict(gamified=self.session.config.get('gamified', False),
+                    day_params=Constants.day_params,
+                    endowment=666)
+    def post(self):
+        # TODO: we inject some extra params here. (not sure we need it though since we 'll get most of the data via channels
+        print('JOPA', self.request.POST)
+        return super().post()
 
 class Results(Page):
     pass

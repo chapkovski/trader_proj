@@ -20,6 +20,7 @@ import os
 import csv
 from itertools import product
 import json
+from csv import DictReader
 author = 'Philipp Chapkovski, HSE-Moscow'
 
 doc = """
@@ -77,11 +78,15 @@ class Constants(BaseConstants):
     default_tab = 'trade'
     endowment = 100
 
-    num_rounds = 8
+    num_rounds = 1
+    with open("data/day_params.csv") as csvfile:
+        day_params = list(DictReader(csvfile))
+
+
     wages = [10, 20]
     fees = [0, 1]
     wages_fees = list(product(wages, fees))
-    assert num_rounds == len(wages_fees) * 2, 'Something is wrong with logic in wages/fees'
+    # assert num_rounds == len(wages_fees) * 2, 'Something is wrong with logic in wages/fees'
     stocks_with_params = [
         dict(name='A',
              initial=1,
@@ -115,8 +120,7 @@ class Subsession(BaseSubsession):
         return json.loads(self.params)
 
     def creating_session(self):
-        resp = requests.get('https://api.npoint.io/47fcdf4d0b892bb03d36')
-        self.params = json.dumps(resp.json())
+
         if self.round_number == 1:
             for p in self.session.get_participants():
                 wages_fees = [val for val in Constants.wages_fees for _ in (0, 1)]
