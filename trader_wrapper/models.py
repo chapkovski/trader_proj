@@ -19,7 +19,7 @@ from .prices import get_prices
 import os
 import csv
 from itertools import product
-
+import json
 author = 'Philipp Chapkovski, HSE-Moscow'
 
 doc = """
@@ -59,7 +59,7 @@ class SourceType(str, Enum):
 class Direction(int, Enum):
     buy = 1
     sell = -1
-
+import requests
 
 class AttrDict(dict):
     def __init__(self, *args, **kwargs):
@@ -110,7 +110,13 @@ class Constants(BaseConstants):
               10: dict(name='Gold', message='Warren Buffet envies you!')}
 
 class Subsession(BaseSubsession):
+    params=models.LongStringField()
+    def get_params(self):
+        return json.loads(self.params)
+
     def creating_session(self):
+        resp = requests.get('https://api.npoint.io/47fcdf4d0b892bb03d36')
+        self.params = json.dumps(resp.json())
         if self.round_number == 1:
             for p in self.session.get_participants():
                 wages_fees = [val for val in Constants.wages_fees for _ in (0, 1)]

@@ -41,14 +41,14 @@ class Results(Page):
 
 
 page_sequence = [
-    Intro,
-    TraderInstructions,
-    TraderExample1,
-    TraderExample2,
-    RETInstructions,
-    ComprehensionCheck,
-    Video,
-    VideoQuiz,
+    # Intro,
+    # TraderInstructions,
+    # TraderExample1,
+    # TraderExample2,
+    # RETInstructions,
+    # ComprehensionCheck,
+    # Video,
+    # VideoQuiz,
     Trader,
-    Results,
+    # Results,
 ]
