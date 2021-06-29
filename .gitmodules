@@ -1,0 +1,3 @@
+[submodule "traderfront"]
+	path = traderfront
+	url = https://github.com/chapkovski/trader.git
