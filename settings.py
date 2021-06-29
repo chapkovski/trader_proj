@@ -53,8 +53,19 @@ INSTALLED_APPS = [
     'webpack_loader',
 ]
 
+# WEBPACK_LOADER = {
+#     'DEFAULT': {
+#         'STATS_FILE': os.path.join(BASE_DIR, 'traderfront', 'webpack-stats.json'),
+#     }
+# }
+
 WEBPACK_LOADER = {
     'DEFAULT': {
+        # 'CACHE': not DEBUG,
+        'BUNDLE_DIR_NAME': 'dist/',  # must end with slash
         'STATS_FILE': os.path.join(BASE_DIR, 'traderfront', 'webpack-stats.json'),
+        'POLL_INTERVAL': 0.3,
+        'TIMEOUT': None,
+        'IGNORE': [r'.+\.hot-update.js', r'.+\.map']
     }
 }
