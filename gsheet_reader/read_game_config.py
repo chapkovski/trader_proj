@@ -1,26 +1,28 @@
 import gspread
+import os
+import json
 
-from oauth2client.service_account import ServiceAccountCredentials
 
 def game_config():
 
-    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+    google_api_json = os.environ.get('GOOGLE_API_JSON')
+    if google_api_json:
+        print('reading google api info from env variable')
+        params = json.loads(google_api_json)
+        gc = gspread.service_account_from_dict(params)
+    else:
+        print('did not find GOOGLE_API_JSON, reading secret from config then...')
+        gc = gspread.service_account()
 
-    # add credentials to the account
-    creds = ServiceAccountCredentials.from_json_keyfile_name('trader-317212-ec72a67b17eb.json', scope)
-    # ServiceAccountCredentials.from_json_keyfile_dict()
-    # authorize the clientsheet
-    client = gspread.authorize(creds)
-    # get the instance of the Spreadsheet
-    sheet = client.open('trader_options')
+    sheet = gc.open('trader_options')
 
-    general_options= sheet.worksheet('general').get_all_records()
+    general_options = sheet.worksheet('general').get_all_records()
     round_specific = sheet.worksheet('round_specific').get_all_records()
-
-
 
     # view the data
     print(general_options)
     print(round_specific)
+
+
 if __name__ == '__main__':
     game_config()

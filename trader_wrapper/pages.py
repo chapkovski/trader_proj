@@ -41,7 +41,7 @@ class Trader(Page):
     def game_params(self):
         return dict(gamified=self.session.config.get('gamified', False),
                     day_params=Constants.day_params,
-                    endowment=666)
+                    endowment=Constants.endowment)
 
     def post(self):
         # TODO: we inject some extra params here. (not sure we need it though since we 'll get most of the data via channels
