@@ -43,10 +43,7 @@ class Trader(Page):
                     day_params=Constants.day_params,
                     endowment=Constants.endowment)
 
-    def post(self):
-        # TODO: we inject some extra params here. (not sure we need it though since we 'll get most of the data via channels
-        print('JOPA', self.request.POST)
-        return super().post()
+
 
 
 class Results(Page):

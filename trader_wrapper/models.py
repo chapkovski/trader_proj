@@ -178,6 +178,7 @@ class Player(BasePlayer):
 
     ############ END OF: post experimental survey quesitons.  #############################################################
     def register_event(self, data):
+        print('WE GET THE DATA', data)
         timestamp = timezone.now()
 
         self.events.create(owner=self,
