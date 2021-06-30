@@ -62,7 +62,7 @@ INSTALLED_APPS = [
 WEBPACK_LOADER = {
     'DEFAULT': {
         # 'CACHE': not DEBUG,
-        'BUNDLE_DIR_NAME': 'dist/',  # must end with slash
+        'BUNDLE_DIR_NAME': 'vue/',  # must end with slash
         'STATS_FILE': os.path.join(BASE_DIR, 'traderfront', 'webpack-stats.json'),
         'POLL_INTERVAL': 0.3,
         'TIMEOUT': None,
