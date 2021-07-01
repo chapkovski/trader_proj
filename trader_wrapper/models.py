@@ -180,14 +180,15 @@ class Player(BasePlayer):
     def register_event(self, data):
         print('WE GET THE DATA', data)
         timestamp = timezone.now()
-
+        balance= float(data.pop('balance', 0))
         self.events.create(owner=self,
                            timestamp=timestamp,
                            source='client',
                            name=data.pop('name', ''),
-                           balance=data.pop('balance', ''),
+                           balance=balance,
                            body=json.dumps(data))
-        return {self.id_in_group: dict(timestamp=timestamp.strftime('%m_%d_%Y_%H_%M_%S'), action='getServerConfirmation')}
+        return {
+            self.id_in_group: dict(timestamp=timestamp.strftime('%m_%d_%Y_%H_%M_%S'), action='getServerConfirmation')}
 
     def update_stocks_and_balance(self, data):
         timestamp = data.get('timestamp')
@@ -459,32 +460,19 @@ def custom_export(players):
 
     player_fields = ['participant_code',
                      'round_number',
-                     'trading_round_starts',
-                     'trading_round_ends',
                      'age', 'gender', 'income',
-                     'starting_balance',
-                     'ending_balance',
                      'wage',
                      'transaction_fee',
-                     'num_tasks_submitted',
-                     'num_correct_tasks_submitted',
                      'session_code', 'treatment']
     yield field_names + player_fields
     for q in Event.objects.filter(owner__session=session).order_by('owner__session', 'owner__round_number',
                                                                    'timestamp'):
         yield [getattr(q, f) or '' for f in field_names] + [q.owner.participant.code,
                                                             q.owner.round_number,
-                                                            q.owner.start_time,
-                                                            q.owner.end_time,
                                                             q.owner.age,
                                                             q.owner.gender,
                                                             q.owner.income,
-                                                            q.owner.starting_balance,
-                                                            q.owner.ending_balance,
                                                             q.owner.wage,
                                                             q.owner.transaction_fee,
-                                                            q.owner.num_tasks_submitted,
-                                                            q.owner.num_correct_tasks_submitted,
                                                             q.owner.session.code,
-
                                                             q.owner.session.config.get('display_name')]
