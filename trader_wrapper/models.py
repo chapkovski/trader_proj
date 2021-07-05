@@ -80,7 +80,7 @@ class Constants(BaseConstants):
     stocks = ['A', 'B', 'ETF_A', 'ETF_B']
     tabs = ['work', 'trade']
     default_tab = 'trade'
-    endowment = 100
+    endowment = 0
 
     num_rounds = 1
     with open("data/day_params.csv") as csvfile:
