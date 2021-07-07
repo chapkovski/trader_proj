@@ -186,7 +186,9 @@ class Player(BasePlayer):
                            source='client',
                            name=data.pop('name', ''),
                            balance=balance,
-                           body=json.dumps(data))
+                           round_number=data.pop('round_number', None),
+                           body=json.dumps(data),
+                           )
         return {
             self.id_in_group: dict(timestamp=timestamp.strftime('%m_%d_%Y_%H_%M_%S'), action='getServerConfirmation')}
 
@@ -451,6 +453,7 @@ class Event(djmodels.Model):
     timestamp = djmodels.DateTimeField(null=True, blank=True)
     body = models.StringField()
     balance = models.FloatField()  # to store the current state of bank account
+    round_number  = models.IntegerField()
 
 
 def custom_export(players):
@@ -459,7 +462,7 @@ def custom_export(players):
     field_names = [i.name for i in all_fields]
 
     player_fields = ['participant_code',
-                     'round_number',
+
                      'age', 'gender', 'income',
                      'wage',
                      'transaction_fee',
@@ -468,7 +471,7 @@ def custom_export(players):
     for q in Event.objects.filter(owner__session=session).order_by('owner__session', 'owner__round_number',
                                                                    'timestamp'):
         yield [getattr(q, f) or '' for f in field_names] + [q.owner.participant.code,
-                                                            q.owner.round_number,
+
                                                             q.owner.age,
                                                             q.owner.gender,
                                                             q.owner.income,
