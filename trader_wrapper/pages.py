@@ -41,7 +41,8 @@ class Trader(Page):
     def game_params(self):
         return dict(gamified=self.session.config.get('gamified', False),
                     day_params=Constants.day_params,
-                    endowment=Constants.endowment)
+                    endowment=Constants.endowment,
+                    dayLength=60)
 
 
 
