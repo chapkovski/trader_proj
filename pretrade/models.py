@@ -10,15 +10,15 @@ from otree.api import (
 )
 
 
-author = 'Your name here'
+author = 'Philipp Chapkovski, HSE Moscow, chapkovski@gmail.com'
 
 doc = """
-Your app description
+Instructions, comprehension check for trader
 """
 
 
 class Constants(BaseConstants):
-    name_in_url = 'financial_quiz'
+    name_in_url = 'pretrade'
     players_per_group = None
     num_rounds = 1
 

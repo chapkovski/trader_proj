@@ -2,12 +2,18 @@ from os import environ
 import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TIME_ZONE = 'UTC'
+default_app_seq = [
+    # 'pretrade',
+    # 'trader_wrapper',
+    'post_experimental'
+
+]
 SESSION_CONFIGS = [
     dict(
         name='baseline',
         display_name="trader - baseline",
         num_demo_participants=1,
-        app_sequence=['trader_wrapper'],
+        app_sequence=default_app_seq,
         gamified=False,
 
     ),
@@ -16,7 +22,7 @@ SESSION_CONFIGS = [
         name='gamified',
         display_name="trader - gamified",
         num_demo_participants=1,
-        app_sequence=['trader_wrapper'],
+        app_sequence=default_app_seq,
         gamified=True,
     ),
 
@@ -51,13 +57,9 @@ SECRET_KEY = 'y(8c37tkwqf#m$gg9=z*54k&jojh6ddhlj75j4klo6evkkfwb%'
 INSTALLED_APPS = [
     'otree',
     'webpack_loader',
+    'trader_wrapper'
 ]
 
-# WEBPACK_LOADER = {
-#     'DEFAULT': {
-#         'STATS_FILE': os.path.join(BASE_DIR, 'traderfront', 'webpack-stats.json'),
-#     }
-# }
 
 WEBPACK_LOADER = {
     'DEFAULT': {

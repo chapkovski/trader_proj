@@ -89,7 +89,6 @@ class Constants(BaseConstants):
     wages = [10, 20]
     fees = [0, 1]
     wages_fees = list(product(wages, fees))
-    # assert num_rounds == len(wages_fees) * 2, 'Something is wrong with logic in wages/fees'
     stocks_with_params = [
         dict(name='A',
              initial=1,
@@ -170,17 +169,11 @@ class Player(BasePlayer):
     num_tasks_submitted = models.IntegerField(doc='to store number of total tasks submitted', initial=0)
     num_correct_tasks_submitted = models.IntegerField(doc='to store number of correct tasks submitted',
                                                       initial=0)
-    ########### BLOCK: post experimental survey quesitons.  ##############################################################
-    # TODO: move to a separate app in production
-    age = models.IntegerField()
-    gender = models.StringField()
-    income = models.IntegerField()
 
-    ############ END OF: post experimental survey quesitons.  #############################################################
     def register_event(self, data):
         print('WE GET THE DATA', data)
         timestamp = timezone.now()
-        balance= float(data.pop('balance', 0))
+        balance = float(data.pop('balance', 0))
         self.events.create(owner=self,
                            timestamp=timestamp,
                            source='client',
@@ -191,256 +184,6 @@ class Player(BasePlayer):
                            )
         return {
             self.id_in_group: dict(timestamp=timestamp.strftime('%m_%d_%Y_%H_%M_%S'), action='getServerConfirmation')}
-
-    def update_stocks_and_balance(self, data):
-        timestamp = data.get('timestamp')
-        body = data.get('body')
-        direction = body.get('direction')
-        quantity = body.get('quantity')
-        name = body.get('name')
-        stock = self.deposit.get(name=name)
-        old_quantity = stock.quantity
-        stock.quantity += quantity
-        stock.save()
-        price = self.get_price(timestamp, stock.name)
-        Event.objects.create(owner=self,
-                             timestamp=timestamp,
-                             source=SourceType.inner,
-                             name='change_in_deposit',
-                             body=dict(stock_name=stock.name,
-                                       direction=direction,
-                                       price=price,
-                                       old_quantity=old_quantity,
-                                       quantity_to_process=quantity,
-                                       new_quantity=stock.quantity,
-                                       ))
-
-        # we invert direction here because selling and buying affects balance in an inverted way (obviosly)
-        amount = -1 * price * quantity
-        old_balance = self.ending_balance
-        self.ending_balance += amount
-
-        Event.objects.create(owner=self,
-                             timestamp=timestamp,
-                             source=SourceType.inner,
-                             name='change_in_balance',
-                             balance=self.ending_balance,
-                             body=dict(
-                                 old_balance=old_balance,
-                                 amount=amount,
-                                 new_balance=self.ending_balance,
-                                 source='trade'
-                             ))
-        if self.transaction_fee and self.transaction_fee > 0:
-            # TODO: do we need that? for speed let's keep like that for a moment
-            self.update_balance_and_register_fee(timestamp)
-        # TODO: in production some awards (based on time spent) are given in front, not inner
-        # TODO: if the award is inner-generated then we need to return something here to give info to front
-        self.assign_awards(timestamp)
-
-    def assign_awards(self, timestamp):
-        n_transactions = self.events.filter(name='transaction').count()
-        award = Constants.awards.get(n_transactions)
-        if award:
-            event = Event.objects.create(owner=self,
-                                         timestamp=timestamp,
-                                         source=SourceType.inner,
-                                         name='award',
-                                         body=award)
-            return event
-
-    def update_balance_and_register_fee(self, timestamp):
-        old_balance = self.ending_balance
-        self.ending_balance -= self.transaction_fee
-
-        Event.objects.create(owner=self,
-                             timestamp=timestamp,
-                             source=SourceType.inner,
-                             name='change_in_balance',
-                             balance=self.ending_balance,
-                             body=dict(
-                                 old_balance=old_balance,
-                                 amount=self.transaction_fee,
-                                 new_balance=self.ending_balance,
-                                 source='transaction_fee'
-                             ))
-
-    def update_tasks_and_balance(self, data):
-        body = data.get('body')
-        task_id = body.get('task_id')
-        timestamp = data.get('timestamp')
-        task = Task.objects.get(id=task_id)
-        task.answer = body.get('answer')
-        task.is_correct = task.answer == task.correct_answer
-        task.save()
-        self.num_tasks_submitted += 1
-        self.num_correct_tasks_submitted += task.is_correct
-        Event.objects.create(owner=self,
-                             timestamp=timestamp,
-                             name='task_submitted',
-                             source=SourceType.inner,
-                             body=dict(
-                                 answer=task.answer,
-                                 is_correct=task.is_correct,
-                                 num_tasks_submitted=self.num_tasks_submitted,
-                                 num_correct_tasks_submitted=self.num_correct_tasks_submitted,
-                             ))
-
-        if task.is_correct:
-            price = self.wage
-            amount = price * task.is_correct
-            old_balance = self.ending_balance
-            self.ending_balance += amount
-            Event.objects.create(owner=self,
-                                 timestamp=timestamp,
-                                 source=SourceType.inner,
-                                 name='change_in_balance',
-                                 balance=self.ending_balance,
-                                 body=dict(
-                                     old_balance=old_balance,
-                                     amount=amount,
-                                     new_balance=self.ending_balance,
-                                     source='work'
-                                 ))
-        new_task = self.get_current_task(timestamp=timestamp)
-        Event.objects.create(owner=self,
-                             timestamp=timestamp,
-                             name='new_task_generated',
-                             source=SourceType.inner,
-                             body=dict(
-                                 id=new_task.id,
-                                 correct_answer=new_task.correct_answer
-                             ))
-
-    def update_current_stock_tab(self, data):
-        new_stock_tab = data.get('tab_name')
-        self.current_stock_shown = new_stock_tab
-
-    def update_current_tab(self, data):
-        new_tab = data.get('body').get('tab_name')
-        self.current_tab = new_tab
-        self.save()
-
-    def get_price(self, timestamp, stock_name):
-        current_prices = self.price_request(timestamp=timestamp)
-        for i in current_prices:
-            if i.get('name') == stock_name:
-                return i.get('price')
-
-    def generate_single_price(self, name):
-        # TODO: somewhere here we inject proper price generation, right now just a random uniform
-        return random.random()
-
-    def generate_prices(self):
-        """we bulk create price updates here.
-        The trick is that also in production we pre-generate a flow of prices BEFORE the trading day starts
-        with corresponding timestamps. Then we feed them every time we get a price_update request from a client.
-        That we guarantee the fastest possible reaction.
-        """
-
-        # TODO: NB! that obviosly should be used detached from the timestamp because we don't know
-        #  when the player actually arrives to the corresponding page. however for mock generating reasons
-        #  it's ok to keep it like that for now.
-
-        # TODO: all this BS should be optimized for production.
-        t = self.start_time
-        times = []
-        while t < self.end_time:
-            times.append(t)
-            t = t + relativedelta(seconds=Constants.tick)
-        n = len(times)
-        stocks_with_prices = get_prices(Constants.stocks_with_params, n)
-
-        ps = []
-        for i in stocks_with_prices:
-            for j, p in enumerate(i.get('prices')):
-                t = times[j]
-                ps.append(Price(price=p, timestamp=t, name=i.get('name'), owner=self))
-
-        # TODO: we may limit quantity here with `batch_size` for sqlite (it overloads with too long queries)
-        Price.objects.bulk_create(ps)
-        # TODO: we seriously need to think whether we want to register these events in advance in production
-        #  we can't do this tbh because we don't know exact timestamps of the starting time.
-        #  That works for mocked data only.
-        events = []
-        for p in ps:
-            events.append(Event(owner=self, source=SourceType.inner,
-                                name='price_update',
-                                timestamp=p.timestamp,
-                                body=dict(stock_name=p.name, new_stock_price=p.price)
-                                ))
-        Event.objects.bulk_create(events)
-
-    def generate_deposit(self):
-        """a temporary solution to generate initial set of stocks to keep track of attainability of purchases/sales.
-        in production: return a bunch of deposit objects so they can created in a huge bulk_create for the entire
-        session, not for a single user, which can make it slower than we want.
-        """
-        for i in Constants.stocks:
-            # TODO: bulk creation of Deposits here
-            stonks = [Deposit(name=i, owner=self, quantity=0)]
-            Deposit.objects.bulk_create(stonks)
-
-    def latest_timestamp(self):
-        """gives a latest possible timestamp"""
-        # TODO: this one to be used in production to send a signal that session is over
-        pass
-
-    def get_current_task(self, timestamp):
-        """TODO: timestamp should be removed in production and substituted by real time"""
-        tasks = self.tasks.filter(answer__isnull=True)
-        if tasks.exists():
-            return tasks.latest()
-        task_body = self.precreating_task(timestamp)
-        t = Task.objects.create(**task_body)
-        return t
-
-    def precreating_task(self, t):
-        """TODO: In production returns two"""
-        return dict(body='',
-                    correct_answer='asdf',
-                    timestamp=t,
-                    owner=self)
-
-    def price_request(self, timestamp):
-        """Returns a dict of recent prices that are earlier than a given timestamp"""
-
-        most_recent_time_stamp = self.prices.filter(timestamp__lte=timestamp).latest().timestamp
-        # we use here the fact N stock prices are pre-created in waves in groups of 4
-        # TODO: somewhere here in production we should check that the trading session is not over
-        return self.prices.filter(timestamp=most_recent_time_stamp).values('name', 'price', 'timestamp')
-
-
-class Price(djmodels.Model):
-    class Meta:
-        get_latest_by = 'timestamp'
-
-    name = models.StringField()
-    price = models.FloatField()
-    timestamp = djmodels.DateTimeField(null=True, blank=True)
-    owner = djmodels.ForeignKey(to=Player, on_delete=djmodels.CASCADE, related_name='prices')
-
-    def __str__(self):
-        return f'Price {self.name}: price: {self.price}; timestamp: {self.timestamp}'
-
-
-class Deposit(djmodels.Model):
-    owner = djmodels.ForeignKey(to=Player, on_delete=djmodels.CASCADE, related_name='deposit')
-    quantity = models.IntegerField()
-    name = models.StringField()
-
-
-class Task(djmodels.Model):
-    class Meta:
-        ordering = ['timestamp']
-        get_latest_by = 'timestamp'
-
-    owner = djmodels.ForeignKey(to=Player, on_delete=djmodels.CASCADE, related_name='tasks')
-    body = models.StringField()
-    correct_answer = models.StringField()
-    answer = models.StringField()
-    is_correct = models.BooleanField()
-    timestamp = djmodels.DateTimeField(null=True, blank=True)
 
 
 class Event(djmodels.Model):
@@ -453,7 +196,7 @@ class Event(djmodels.Model):
     timestamp = djmodels.DateTimeField(null=True, blank=True)
     body = models.StringField()
     balance = models.FloatField()  # to store the current state of bank account
-    round_number  = models.IntegerField()
+    round_number = models.IntegerField()
 
 
 def custom_export(players):
@@ -462,19 +205,14 @@ def custom_export(players):
     field_names = [i.name for i in all_fields]
 
     player_fields = ['participant_code',
-
-                     'age', 'gender', 'income',
                      'wage',
                      'transaction_fee',
-                     'session_code', 'treatment']
+                     'session_code',
+                     'treatment']
     yield field_names + player_fields
     for q in Event.objects.filter(owner__session=session).order_by('owner__session', 'owner__round_number',
                                                                    'timestamp'):
         yield [getattr(q, f) or '' for f in field_names] + [q.owner.participant.code,
-
-                                                            q.owner.age,
-                                                            q.owner.gender,
-                                                            q.owner.income,
                                                             q.owner.wage,
                                                             q.owner.transaction_fee,
                                                             q.owner.session.code,
