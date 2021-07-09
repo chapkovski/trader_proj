@@ -11,12 +11,13 @@ from otree.api import (
 import json
 from django.db import models as djmodels
 from pprint import pprint
+import yaml
 author = 'Philipp Chapkovski, HSE Moscow, chapkovski@gmail.com'
 
 doc = """
 Post experimental questionnaire including financial quiz
 """
-import yaml
+
 
 
 class Constants(BaseConstants):

@@ -1,7 +1,7 @@
 from otree.api import Currency as c, currency_range
 from ._builtin import Page, WaitPage
 from .models import Constants, Player, FinQ
-from django.forms import inlineformset_factory, BaseModelFormSet, BaseInlineFormSet
+from django.forms import inlineformset_factory
 from django import forms
 import json
 from otree.api import widgets
@@ -13,9 +13,9 @@ class FinQForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         jchoices = json.loads(self.instance.choices)
-        print('JOPA?', jchoices, type(jchoices))
+
         exchoices = [(i, j) for i, j in enumerate(jchoices)]
-        print('111JOPA?', exchoices, type(exchoices))
+
         self.fields['answer'] = forms.ChoiceField(widget=widgets.RadioSelect(attrs={'required': True}),
                                                   choices=exchoices,
                                                   required=True)
@@ -50,9 +50,6 @@ class FinQuiz(Page):
         formset = self.get_formset(data=data)
         return formset
 
-    def post(self):
-        print(self.request.POST)
-        return super().post()
 
 
 class ResultsWaitPage(WaitPage):

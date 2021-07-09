@@ -9,6 +9,10 @@ from otree.api import (
     currency_range,
 )
 
+import json
+from django.db import models as djmodels
+from pprint import pprint
+import yaml
 
 author = 'Philipp Chapkovski, HSE Moscow, chapkovski@gmail.com'
 
@@ -32,4 +36,16 @@ class Group(BaseGroup):
 
 
 class Player(BasePlayer):
-    pass
+    cq1 = models.StringField(
+        label="When can you switch between “Trade” and “Work” tabs?",
+        choices=["Only at the beginning of the round",
+                 "Only 1 minute of trading",
+                 "At any point during the round",
+                 "Only two switches are allowed in each round.",
+                 ],
+        widget=widgets.RadioSelect
+    )
+
+    def cq1_error_message(self, value):
+        if value != 'At any point during the round':
+            return 'Wrong answer!'
