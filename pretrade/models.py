@@ -46,6 +46,46 @@ class Player(BasePlayer):
         widget=widgets.RadioSelect
     )
 
+    cq2 = models.StringField(
+        label="If 5-second returns on Stock A and Stock B are -3% and 1.5% respectively, the corresponding 5-second "
+              "leveraged ETF returns are:",
+        choices=["9% and 4.5%",
+                "9% and -4.5%",
+                "-9% and 4.5%",
+                "-9% and -4.5%",
+                 ],
+        widget=widgets.RadioSelect
+    )
+
+    cq3 = models.StringField(
+        label="What carries over between rounds?",
+        choices=["Your trading portfolio",
+                "Your bank account balance",
+                "Both your portfolio and your bank account balance",
+                "Neither your portfolio nor your account balance",
+                 ],
+        widget=widgets.RadioSelect
+    )
+
+    cq4 = models.StringField(
+        label="Your total bonus payment for the experiment depends on:",
+        choices=["Your trading profit across all rounds",
+                "Your trading profit and total work wages in a randomly selected round",
+                "Your trading profit in a randomly selected round",
+                "Your trading profit and total work wages across all rounds",
+                 ],
+        widget=widgets.RadioSelect
+    )
+
     def cq1_error_message(self, value):
         if value != 'At any point during the round':
+            return 'Wrong answer!'
+    def cq2_error_message(self, value):
+        if value != '-9% and 4.5%':
+            return 'Wrong answer!'
+    def cq3_error_message(self, value):
+        if value != 'Neither your portfolio nor your account balance':
+            return 'Wrong answer!'
+    def cq4_error_message(self, value):
+        if value != 'Your trading profit and total work wages in a randomly selected round':
             return 'Wrong answer!'
