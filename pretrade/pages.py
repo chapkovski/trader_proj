@@ -13,5 +13,5 @@ class Instructions(Page):
 
 
 page_sequence = [
-     # Instructions,
+     Instructions,
      CQPage]
