@@ -12,4 +12,6 @@ class Instructions(Page):
 
 
 
-page_sequence = [Instructions, CQPage]
+page_sequence = [
+     # Instructions,
+     CQPage]

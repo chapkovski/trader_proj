@@ -57,7 +57,8 @@ SECRET_KEY = 'y(8c37tkwqf#m$gg9=z*54k&jojh6ddhlj75j4klo6evkkfwb%'
 INSTALLED_APPS = [
     'otree',
     'webpack_loader',
-    'trader_wrapper'
+    'trader_wrapper',
+    'pretrade'
 ]
 
 
