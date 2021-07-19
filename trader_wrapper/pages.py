@@ -47,6 +47,8 @@ class Trader(Page):
                     numTicks=Constants.num_ticks,
                     )
 
+    def before_next_page(self):
+        self.player.set_payoffs()
 
 class Results(Page):
     pass

@@ -78,7 +78,7 @@ class Constants(BaseConstants):
     trading_day_duration = 5  # in minutes
     day_length_in_seconds = 10
     tick_frequency_in_secs = 5
-    num_ticks = int(day_length_in_seconds/tick_frequency_in_secs)
+    num_ticks = int(day_length_in_seconds / tick_frequency_in_secs)
     tick = 5  # how often prices are updated (in seconds)
     stocks = ['A', 'B', 'ETF_A', 'ETF_B']
     tabs = ['work', 'trade']
@@ -127,28 +127,7 @@ class Subsession(BaseSubsession):
         return json.loads(self.params)
 
     def creating_session(self):
-
-        if self.round_number == 1:
-            for p in self.session.get_participants():
-                wages_fees = [val for val in Constants.wages_fees for _ in (0, 1)]
-                p.vars['wages_fees'] = wages_fees
-
-        for p in self.get_players():
-            p.current_stock_shown = random.choice(Constants.stocks)
-            p.current_tab = Constants.default_tab
-            if self.round_number == 1:
-                p.start_time = timezone.now()
-            else:
-                p.start_time = p.in_round(self.round_number - 1).end_time + timedelta(seconds=30)
-            p.end_time = p.start_time + timedelta(minutes=Constants.trading_day_duration)
-            # p.generate_deposit()  # TODO: in production move to bulk update right here
-            # p.generate_prices()  # TODO: in production move to bulk update right here
-            p.endowment = Constants.endowment  # we may randomize it later, let's keep it simple for now.
-            p.starting_balance = p.endowment
-            p.ending_balance = p.endowment
-            # the below thing is ugly AF, but tbh i dont care
-            p.wage = p.participant.vars.get('wages_fees')[p.round_number - 1][0]
-            p.transaction_fee = p.participant.vars.get('wages_fees')[p.round_number - 1][1]
+        pass
 
 
 class Group(BaseGroup):
@@ -161,17 +140,7 @@ class Player(BasePlayer):
     """
     start_time = djmodels.DateTimeField(null=True, blank=True)
     end_time = djmodels.DateTimeField(null=True, blank=True)
-    current_stock_shown = models.StringField(doc='registers сurrent stock shown to a player')
-    current_tab = models.StringField(doc='registers current tab the player is it')
-    endowment = models.FloatField(doc='initial amount given to a participant at the beginning of the trading day')
-    starting_balance = models.FloatField(doc='to store the initial state of bank account')
-    ending_balance = models.FloatField(
-        doc='to store the final (for a specific trading day  aka round) state of bank account')
-    wage = models.FloatField(doc='How much they earn for submitting the correct fee')
-    transaction_fee = models.FloatField(doc='Transaction fee per trade')
-    num_tasks_submitted = models.IntegerField(doc='to store number of total tasks submitted', initial=0)
-    num_correct_tasks_submitted = models.IntegerField(doc='to store number of correct tasks submitted',
-                                                      initial=0)
+    payable_round = models.IntegerField()
 
     def register_event(self, data):
         print('WE GET THE DATA', data)
@@ -188,10 +157,18 @@ class Player(BasePlayer):
         return {
             self.id_in_group: dict(timestamp=timestamp.strftime('%m_%d_%Y_%H_%M_%S'), action='getServerConfirmation')}
 
+    def set_payoffs(self):
+        self.payable_round = random.randint(1, len(Constants.day_params) + 1)
+        last_event_in_payable_round = self.events.filter(round_number=self.payable_round,
+                                                         balance__isnull=False).latest()
+        self.payoff = last_event_in_payable_round.balance
+
+
 
 class Event(djmodels.Model):
     class Meta:
         ordering = ['timestamp']
+        get_latest_by = 'timestamp'
 
     owner = djmodels.ForeignKey(to=Player, on_delete=djmodels.CASCADE, related_name='events')
     source = models.StringField(doc='can be either inner (due to some internal processes) or from client')
@@ -208,15 +185,13 @@ def custom_export(players):
     field_names = [i.name for i in all_fields]
 
     player_fields = ['participant_code',
-                     'wage',
-                     'transaction_fee',
+
                      'session_code',
                      'treatment']
     yield field_names + player_fields
-    for q in Event.objects.filter(owner__session=session).order_by('owner__session', 'owner__round_number',
+    for q in Event.objects.all().order_by('owner__session', 'owner__round_number',
                                                                    'timestamp'):
         yield [getattr(q, f) or '' for f in field_names] + [q.owner.participant.code,
-                                                            q.owner.wage,
-                                                            q.owner.transaction_fee,
+
                                                             q.owner.session.code,
                                                             q.owner.session.config.get('display_name')]
