@@ -76,6 +76,9 @@ class Constants(BaseConstants):
     name_in_url = 'trader_wrapper'
     players_per_group = None
     trading_day_duration = 5  # in minutes
+    day_length_in_seconds = 10
+    tick_frequency_in_secs = 5
+    num_ticks = int(day_length_in_seconds/tick_frequency_in_secs)
     tick = 5  # how often prices are updated (in seconds)
     stocks = ['A', 'B', 'ETF_A', 'ETF_B']
     tabs = ['work', 'trade']

@@ -42,9 +42,10 @@ class Trader(Page):
         return dict(gamified=self.session.config.get('gamified', False),
                     day_params=Constants.day_params,
                     endowment=Constants.endowment,
-                    dayLength=60)
-
-
+                    dayLength=Constants.day_length_in_seconds,
+                    tickFrequency=Constants.tick_frequency_in_secs,
+                    numTicks=Constants.num_ticks,
+                    )
 
 
 class Results(Page):
