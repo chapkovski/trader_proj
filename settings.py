@@ -5,9 +5,14 @@ TIME_ZONE = 'UTC'
 default_app_seq = [
     'pretrade',
     'trader_wrapper',
-    'post_experimental'
-
+    'post_experimental',
+    'q_retail'
 ]
+
+q_app_seq=['q_retail']
+post_app_seq=['post_experimental','q_retail']
+only_pre=['pretrade']
+
 SESSION_CONFIGS = [
     dict(
         name='baseline',
@@ -23,6 +28,30 @@ SESSION_CONFIGS = [
         display_name="trader - gamified",
         num_demo_participants=1,
         app_sequence=default_app_seq,
+        gamified=True,
+    ),
+
+    dict(
+        name='demographic_q',
+        display_name="demographic_q",
+        num_demo_participants=1,
+        app_sequence=q_app_seq,
+        gamified=True,
+    ),
+
+    dict(
+        name='posttrade',
+        display_name="post trade questions",
+        num_demo_participants=1,
+        app_sequence=post_app_seq,
+        gamified=True,
+    ),
+
+    dict(
+        name='pretrade',
+        display_name="Pre-trade only",
+        num_demo_participants=1,
+        app_sequence=only_pre,
         gamified=True,
     ),
 
