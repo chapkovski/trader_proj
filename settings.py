@@ -3,8 +3,8 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TIME_ZONE = 'UTC'
 default_app_seq = [
-    'pretrade',
-    'trader_wrapper',
+    # 'pretrade',
+    'trader_swrapper',
     'post_experimental'
 
 ]
