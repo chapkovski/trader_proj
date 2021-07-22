@@ -10,8 +10,10 @@ from otree.api import (
 )
 import json
 from django.db import models as djmodels
+from django.db.models import F
 from pprint import pprint
 import yaml
+
 author = 'Philipp Chapkovski, HSE Moscow, chapkovski@gmail.com'
 
 doc = """
@@ -19,11 +21,11 @@ Post experimental questionnaire including financial quiz
 """
 
 
-
 class Constants(BaseConstants):
     name_in_url = 'post_experimental'
     players_per_group = None
     num_rounds = 1
+    fee_per_correct_answer = c(1)
     with open(r'./data/financial_quiz.yaml') as file:
         fqs = yaml.load(file, Loader=yaml.FullLoader)
 
@@ -52,6 +54,9 @@ class Player(BasePlayer):
     gender = models.StringField()
     income = models.IntegerField()
 
+    def get_correct_quiz_questions_num(self):
+        return self.finqs.filter(answer=F('correct')).count()
+
 
 class FinQ(djmodels.Model):
     owner = djmodels.ForeignKey(to=Player, on_delete=djmodels.CASCADE, related_name='finqs')
@@ -67,7 +72,6 @@ def custom_export(players):
     player_fields = ['age', 'gender', 'income']
 
     for q in FinQ.objects.filter(answer__isnull=False):
-
         yield [q.label,
                q.answer
                ] + [q.owner.participant.code,

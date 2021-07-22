@@ -50,14 +50,21 @@ class FinQuiz(Page):
         formset = self.get_formset(data=data)
         return formset
 
-
-
-class ResultsWaitPage(WaitPage):
-    pass
+    def before_next_page(self):
+        self.player.payoff = self.player.get_correct_quiz_questions_num() * Constants.fee_per_correct_answer
 
 
 class Results(Page):
-    pass
+    def vars_for_template(self):
+        return dict(
+            chosen_round=self.participant.vars.get('chosen_round',''),
+            trading_payoff=self.participant.vars.get('trading_payoff',''),
+            correct_quiz_questions=self.player.get_correct_quiz_questions_num(),
+            quiz_bonus=self.player.payoff
+        )
 
 
-page_sequence = [FinQuiz, ]
+page_sequence = [
+    FinQuiz,
+    Results
+]

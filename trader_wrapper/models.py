@@ -162,7 +162,8 @@ class Player(BasePlayer):
         last_event_in_payable_round = self.events.filter(round_number=self.payable_round,
                                                          balance__isnull=False).latest()
         self.payoff = last_event_in_payable_round.balance
-
+        self.participant.vars['chosen_round'] = self.payable_round
+        self.participant.vars['trading_payoff'] = self.payoff
 
 
 class Event(djmodels.Model):
@@ -190,7 +191,7 @@ def custom_export(players):
                      'treatment']
     yield field_names + player_fields
     for q in Event.objects.all().order_by('owner__session', 'owner__round_number',
-                                                                   'timestamp'):
+                                          'timestamp'):
         yield [getattr(q, f) or '' for f in field_names] + [q.owner.participant.code,
 
                                                             q.owner.session.code,

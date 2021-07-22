@@ -1,17 +1,50 @@
 from os import environ
 import os
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TIME_ZONE = 'UTC'
 default_app_seq = [
-    # 'pretrade',
+    'pretrade',
     'trader_wrapper',
     'post_experimental'
 
 ]
 SESSION_CONFIGS = [
+
+    dict(
+        name='pretrade',
+        display_name="Pre-trade (instructions, comprehension)",
+        num_demo_participants=1,
+        app_sequence=['pretrade'],
+
+    ),
     dict(
         name='baseline',
-        display_name="trader - baseline",
+        display_name="trader ONLY - baseline",
+        num_demo_participants=1,
+        app_sequence=['trader_wrapper'],
+        gamified=False,
+
+    ),
+
+    dict(
+        name='gamified',
+        display_name="trader ONLY - gamified",
+        num_demo_participants=1,
+        app_sequence=['trader_wrapper'],
+        gamified=True,
+    ),
+
+    dict(
+        name='post',
+        display_name="post-experimental (quiz, SES)",
+        num_demo_participants=1,
+        app_sequence=['post_experimental'],
+
+    ),
+    dict(
+        name='full_baseline',
+        display_name="FULL STUDY - baseline",
         num_demo_participants=1,
         app_sequence=default_app_seq,
         gamified=False,
@@ -19,8 +52,8 @@ SESSION_CONFIGS = [
     ),
 
     dict(
-        name='gamified',
-        display_name="trader - gamified",
+        name='full_gamified',
+        display_name="FULL STUDY - gamified",
         num_demo_participants=1,
         app_sequence=default_app_seq,
         gamified=True,
@@ -60,7 +93,6 @@ INSTALLED_APPS = [
     'trader_wrapper',
     'pretrade'
 ]
-
 
 WEBPACK_LOADER = {
     'DEFAULT': {
