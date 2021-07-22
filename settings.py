@@ -4,7 +4,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TIME_ZONE = 'UTC'
 default_app_seq = [
     # 'pretrade',
-    'trader_swrapper',
+    'trader_wrapper',
     'post_experimental'
 
 ]
