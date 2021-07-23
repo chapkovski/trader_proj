@@ -13,7 +13,7 @@ from django.db import models as djmodels
 from django.db.models import F
 from pprint import pprint
 import yaml
-
+from django_countries.fields import CountryField
 author = 'Philipp Chapkovski, HSE Moscow, chapkovski@gmail.com'
 
 doc = """
@@ -29,6 +29,18 @@ class Constants(BaseConstants):
     with open(r'./data/financial_quiz.yaml') as file:
         fqs = yaml.load(file, Loader=yaml.FullLoader)
 
+    GENDER_CHOICES = ['Male', 'Female', 'Other']
+    EDUCATION_CHOICES = ['high-school graduate',
+                         'undergraduate: 1st year',
+                         'undergraduate: 2nd year',
+                         'undergraduate: 3d year',
+                         'undergraduate: 4th year',
+                         'master',
+                         'MBA',
+                         'PhD'
+                         ]
+    STUDY_MAJOR_CHOICES = ['Finance', 'Economics', 'Other Management', 'Other']
+    COURSE_FINANCIAL_CHOICES = ['No', 'Yes, one', 'Yes, two', 'Yes, three or more']
 
 class Subsession(BaseSubsession):
     def creating_session(self):
@@ -50,10 +62,16 @@ class Group(BaseGroup):
 
 
 class Player(BasePlayer):
-    age = models.IntegerField()
-    gender = models.StringField()
-    income = models.IntegerField()
-
+    gender = models.StringField(choices=Constants.GENDER_CHOICES, widget=widgets.RadioSelectHorizontal,
+                                label='What is your gender?')
+    age = models.IntegerField(label='How old are you?')
+    nationality = CountryField(verbose_name='What is your nationality?', null=True, blank=False )
+    education = models.StringField(choices=Constants.EDUCATION_CHOICES)
+    study_major = models.StringField(choices=Constants.STUDY_MAJOR_CHOICES, label='Study major')
+    experiment_before = models.BooleanField(label='Have you been part of an experiment before?')
+    trading_experience = models.BooleanField(label='Do you have any trading experience?')
+    course_financial = models.StringField(choices=Constants.COURSE_FINANCIAL_CHOICES,
+                                          label='Did you take any course focused on financial markets')
     def get_correct_quiz_questions_num(self):
         return self.finqs.filter(answer=F('correct')).count()
 

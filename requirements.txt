@@ -6,3 +6,4 @@ python-dateutil
 numpy
 pandas
 pyyaml
+django-countries==7.0

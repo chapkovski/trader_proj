@@ -57,14 +57,27 @@ class FinQuiz(Page):
 class Results(Page):
     def vars_for_template(self):
         return dict(
-            chosen_round=self.participant.vars.get('chosen_round',''),
-            trading_payoff=self.participant.vars.get('trading_payoff',''),
+            chosen_round=self.participant.vars.get('chosen_round', ''),
+            trading_payoff=self.participant.vars.get('trading_payoff', ''),
             correct_quiz_questions=self.player.get_correct_quiz_questions_num(),
             quiz_bonus=self.player.payoff
         )
 
 
+class Q(Page):
+    form_model = 'player'
+    form_fields = ['gender',
+                   'age',
+                   'nationality',
+                   'education',
+                   'study_major',
+                   'experiment_before',
+                   'trading_experience',
+                   'course_financial']
+
+
 page_sequence = [
-    FinQuiz,
+    # FinQuiz,
+    Q,
     Results
 ]

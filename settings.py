@@ -91,8 +91,12 @@ INSTALLED_APPS = [
     'otree',
     'webpack_loader',
     'trader_wrapper',
-    'pretrade'
+    'pretrade',
+    'django_countries'
 ]
+COUNTRIES_FIRST = ['US', 'GB']
+COUNTRIES_FIRST_BREAK = '-------'
+COUNTRIES_FIRST_REPEAT = True
 
 WEBPACK_LOADER = {
     'DEFAULT': {
