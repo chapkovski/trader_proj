@@ -75,10 +75,10 @@ class AttrDict(dict):
 class Constants(BaseConstants):
     name_in_url = 'trader_wrapper'
     players_per_group = None
-    trading_day_duration = 5  # in minutes
+    trading_day_duration = 3  # in minutes
     day_length_in_seconds = 180
     tick_frequency_in_secs = 5
-    bonus_probability_coef = 1 ## multiplies secs_spent_in_trade/total_time by this factor to change the  probability to get extra stocks
+    bonus_probability_coef = 0.05 ## multiplies secs_spent_in_trade/total_time by this factor to change the  probability to get extra stocks
     num_stocks_in_bonus = 1 ## number of stocks provided as bonus
     num_ticks = int(day_length_in_seconds / tick_frequency_in_secs)
     tick = 5  # how often prices are updated (in seconds)
@@ -92,7 +92,7 @@ class Constants(BaseConstants):
         day_params = list(DictReader(csvfile))
 
     wages = [10, 20]
-    fees = [0, 1]
+    fees = [0, 0.05]
     wages_fees = list(product(wages, fees))
     stocks_with_params = [
         dict(name='A',
@@ -116,7 +116,7 @@ class Constants(BaseConstants):
              ),
     ]
     awards = {1: dict(name='First transaction',
-                      message='Hooray! you have made your first transaction!'),
+                      message='Hooray! You have made your first transaction!'),
               3: dict(name='Bronze', message='Three transactions! That\'s the spirit!'),
               5: dict(name='Silver', message='Incredible, George Soros wishes you luck!'),
               10: dict(name='Gold', message='Warren Buffet envies you!')}
