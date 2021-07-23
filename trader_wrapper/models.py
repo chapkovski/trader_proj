@@ -76,8 +76,10 @@ class Constants(BaseConstants):
     name_in_url = 'trader_wrapper'
     players_per_group = None
     trading_day_duration = 5  # in minutes
-    day_length_in_seconds = 600
+    day_length_in_seconds = 180
     tick_frequency_in_secs = 5
+    bonus_probability_coef = 1 ## multiplies secs_spent_in_trade/total_time by this factor to change the  probability to get extra stocks
+    num_stocks_in_bonus = 1 ## number of stocks provided as bonus
     num_ticks = int(day_length_in_seconds / tick_frequency_in_secs)
     tick = 5  # how often prices are updated (in seconds)
     stocks = ['A', 'B', 'ETF_A', 'ETF_B']
