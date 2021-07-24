@@ -3,15 +3,15 @@
     - More than $112
     - Exactly $112
     - Less than $112
-    - Don’t know
+    - Don't know
     - Refuse to answer
   correct: 0
-- label: Imagine that the interest rate on your savings account was 2% per year and inflation was 3% per year. After 1 year, with the money in this account, would you be able to buy…
+- label: Imagine that the interest rate on your savings account was 2% per year and inflation was 3% per year. After 1 year, with the money in this account, would you be able to buy
   choices:
     - More than today
     - Exactly the same as today
     - Less than today
-    - Don’t know / Not sure
+    - Don't know / Not sure
     - Refuse to answer
   correct: 2
 - label: If interest rates fall, what will typically happen to bond prices?
@@ -20,21 +20,21 @@
     - They will fall
     - They will stay the same
     - There is no relationship between bond prices and the interest rate
-    - Don’t know / Not sure
+    - Don't know / Not sure
     - Prefer not to say
   correct: 0
 - label: A 20-year mortgage typically requires higher monthly payments than a 30-year mortgage, but the total interest paid over the life of the loan will be less.
   choices:
     - True
     - False
-    - Don’t know / Not sure
+    - Don't know / Not sure
     - Prefer not to say
   correct: 1
 - label: Do you think the following statement is true or false? Buying a single company stock usually provides a safer return than a stock mutual fund.
   choices:
     - True
     - False
-    - Don’t know / Not sure
+    - Don't know / Not sure
     - Refuse to answer
   correct: 1
 - label: A portfolio consists of 50/50 stock funds Yellow and Blue. If the return from Yellow is 3% and the return from Blue is 9%, what is the return from the portfolio?
@@ -44,7 +44,7 @@
     - Greater than 6%
     - Less than 6%
   correct: 0
-- label: A portfolio invests equally (50/50) in two funds, Stones and Sticks. The return from Stones fluctuates by about 5% year-to-year and the return from Sticks also fluctuates by about 5% year-to-year. They don’t move perfectly in tandem, however (i.e., they are not perfectly correlated). What is the typical year-to-year fluctuation for the portfolio?
+- label: A portfolio invests equally (50/50) in two funds, Stones and Sticks. The return from Stones fluctuates by about 5% year-to-year and the return from Sticks also fluctuates by about 5% year-to-year. They don't move perfectly in tandem, however (i.e., they are not perfectly correlated). What is the typical year-to-year fluctuation for the portfolio?
   choices:
     - Exactly 5%
     - Less than 5%
@@ -57,7 +57,7 @@
     - $500
     - $250
     - $0
-    - Don’t know / Not sure
+    - Don't know / Not sure
   correct: 2
 - label: Which is the best definition of "selling short"?
   choices:
@@ -65,17 +65,17 @@
     - Selling shares of a stock before it has reached its peak
     - Selling shares of a stock at a loss
     - Selling borrowed shares of a stock
-    - Don’t know / Not sure
+    - Don't know / Not sure
   correct: 3
-- label: If you buy a company’s stock...
+- label: If you buy a company's stock...
   choices:
     - You have lent money to the company
     - The company will return your original investment to you with interest
     - You own a part of the company
-    - You are liable for the company’s debts
-    - Don’t know / Not sure
+    - You are liable for the company's debts
+    - Don't know / Not sure
   correct: 2
-- label: Which of these strategies may help reduce an individual’s financial risk?
+- label: Which of these strategies may help reduce an individual's financial risk?
   choices:
     - Maintaining a number of varied investments
     - Investing in major tech start-ups
