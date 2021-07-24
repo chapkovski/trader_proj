@@ -21,7 +21,8 @@
 <div class="card my-3" style="line-height:134%">
     <div class="card-body">
 
-        <p> Welcome and thank you for participating in the trading experiment! <br>
+        <p>
+            Welcome and thank you for participating in the trading experiment! <br>
             Please read the instructions carefully. To proceed with the experiment, you will need to correctly
             answer four
             validation questions to verify your understanding of the instructions. </p>
@@ -61,10 +62,8 @@
                     </li>
                     <li> At the end of the experiment, one of the trading rounds will be selected at random as your
                         payment round. <br>
-                        You will receive a bonus payment proportional to the wealth in the randomly selected round,
-                        at a rate of
-                        <mark> X</mark>
-                        .
+                        You will receive a bonus payment proportional to the wealth in the randomly selected round, at a
+                        rate of 1 E$ = 0.05 CA$ (E$ stands for "experimental dollars").
                         So think and play in each round as if it is the round that counts, because it might be!
                     </li>
                 </ol>
@@ -173,9 +172,8 @@
             <div class="card-body">
 
                 <ol class="list-group list-group-flush">
-                    <li> In the work tab, you complete simple numerical tasks to earn a wage of
-                        <mark>Y</mark>
-                        ECU.
+                    <li> In the work tab, you complete simple numerical tasks to earn a wage of either 10 E$ or 20 E$,
+                        depending on the round you are in.
                     </li>
                     <li> The wage you earn per task will be directly deposited into your bank account balance.</li>
                     <li> At the top of the screen, you will see the number of total tasks you have attempted, the
@@ -199,6 +197,17 @@
                     <li> Your total compensation includes both a participation fee and a bonus based on your
                         performance in the experiment. Payment is made through the Prolific platform.
                     </li>
+                    {% if session.config.gamified %}
+                        <li>
+                        At the end of the experiment, you may receive a randomly chosen free stock.
+                        The probability of receiving the free stock is 5% times the proportion of time spent on the
+                        trading platform.
+                        For example, if you spend 1.5 minutes on the trading platform and 1.5 minutes on the working
+                        task, you receive one unit of either stock ABC or stock XYZ at the end of the round with
+                        probability 1.5/3 * 5% = 2.5%.
+                    </li>
+
+                    {% endif %}
                     <li> After you are finished, the computer will select one of the trading rounds at random.</li>
                     <li> This will be your payment round: You will receive a bonus payment proportional to your
                         end-of-round balance (including wages earned and trading profits).
