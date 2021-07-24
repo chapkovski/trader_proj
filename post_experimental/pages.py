@@ -77,7 +77,7 @@ class Q(Page):
 
 
 page_sequence = [
-    # FinQuiz,
+    FinQuiz,
     Q,
     Results
 ]
