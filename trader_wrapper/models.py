@@ -78,6 +78,8 @@ class Constants(BaseConstants):
     trading_day_duration = 5  # in minutes
     day_length_in_seconds = 180
     tick_frequency_in_secs = 5
+    work_dict_length = 6 # these two parameters define the difficulty of decoding task
+    task_length = 4 # these two parameters define the difficulty of decoding task
     bonus_probability_coef = 1 ## multiplies secs_spent_in_trade/total_time by this factor to change the  probability to get extra stocks
     num_stocks_in_bonus = 1 ## number of stocks provided as bonus
     num_ticks = int(day_length_in_seconds / tick_frequency_in_secs)

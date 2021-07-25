@@ -16,7 +16,9 @@ class Trader(Page):
                     tickFrequency=Constants.tick_frequency_in_secs,
                     numTicks=Constants.num_ticks,
                     bonusProbabilityCoef=Constants.bonus_probability_coef,
-                    numStocksInBonus=Constants.num_stocks_in_bonus
+                    numStocksInBonus=Constants.num_stocks_in_bonus,
+                    workDictLength=Constants.work_dict_length,
+                    taskLength=Constants.task_length
                     )
 
     def before_next_page(self):
