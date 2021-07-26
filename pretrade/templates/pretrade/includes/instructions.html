@@ -63,7 +63,7 @@
                     <li> At the end of the experiment, one of the trading rounds will be selected at random as your
                         payment round. <br>
                         You will receive a bonus payment proportional to the wealth in the randomly selected round, at a
-                        rate of 1 E$ = {{ gps.real_world_current_per_point }} CA$ (E$ stands for "experimental dollars").
+                        rate of 1 E$ = {{ gps.real_world_currency_per_point }} CA$ (E$ stands for "experimental dollars").
                         So think and play in each round as if it is the round that counts, because it might be!
                     </li>
                 </ol>
@@ -197,12 +197,12 @@
                     <li> Your total compensation includes both a participation fee and a bonus based on your
                         performance in the experiment. Payment is made through the Prolific platform.
                     </li>
-                    {% if session.config.gamified %}
+                    {% if gps.gamified %}
                         <li>
                         At the end of the experiment, you may receive a randomly chosen free stock.
                         The probability of receiving the free stock is 5% times the proportion of time spent on the
                         trading platform.
-                        For example, if you spend 1.5 minutes on the trading platform and 1.5 minutes on the working
+                        For example, if you spend {{ gps.example_time_min }} minutes on the trading platform and {{ gps.example_work_time_min }} minutes on the working
                         task, you receive one unit of either stock {{ gps.stock_A_name }} or stock {{ gps.stock_B_name }} at the end of the round with
                         probability {{ gps.example_time_min }}/{{ gps.day_length_in_min }} * {{ gps.formatted_prob }}% =
                             {{ gps.example_formatted_prob }}%.

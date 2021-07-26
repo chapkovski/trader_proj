@@ -13,6 +13,7 @@ import json
 from django.db import models as djmodels
 from pprint import pprint
 import yaml
+from csv import DictReader
 
 author = 'Philipp Chapkovski, HSE Moscow, chapkovski@gmail.com'
 
@@ -21,6 +22,8 @@ Instructions, comprehension check for trader
 """
 with open(r'./data/params.yaml') as file:
     _general_params = yaml.load(file, Loader=yaml.FullLoader)
+with open("data/day_params.csv") as csvfile:
+    _day_params = list(DictReader(csvfile))
 
 
 class Constants(BaseConstants):
@@ -37,26 +40,23 @@ class Group(BaseGroup):
     pass
 
 
-
-
 def general_params(subsession: Subsession):
     gps = _general_params.copy()
-    numTicks = gps.get('dayLength')/gps.get('tickFrequency')
+    numTicks = gps.get('dayLength') / gps.get('tickFrequency')
 
     injected = dict(gamified=subsession.session.config.get('gamified', False),
-                    numTicks = numTicks,
-                    day_length_in_min,
-                    num_rounds,
-                    real_world_current_per_point,
-                    initial_stock_items,
-                    stock_A_name
-                    stock_B_name,
-                    fee_low,
-    fee_high,
-    example_time_min,
-    formatted_prob
-    example_formatted_prob)
+                    numTicks=numTicks,
+                    day_length_in_min=gps.get('dayLength') / 60,
+                    num_rounds=len(_day_params),
+                    real_world_currency_per_point=subsession.session.config.get('real_world_currency_per_point'),
+                    example_work_time_min=gps.get('dayLength') / 60 - gps.get('example_time_min'),
+                    formatted_prob=gps.get('bonusProbabilityCoef') * 100,
+                    example_formatted_prob=(gps.get('example_time_min') / (gps.get('dayLength') / 60) * gps.get(
+                        'bonusProbabilityCoef')) * 100,
+                    day_params= _day_params
+                    )
     return dict(**gps, **injected)
+
 
 class Player(BasePlayer):
     cq1 = models.StringField(
