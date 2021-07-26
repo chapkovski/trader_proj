@@ -91,9 +91,9 @@ class Player(BasePlayer):
     purpose = models.LongStringField(label='What do you think is the purpose of this study?', default='')
     difficulty = models.LongStringField(label='Did you encounter any difficulty throughout the experiment?', default='')
 
-
-def get_correct_quiz_questions_num(self):
+    def get_correct_quiz_questions_num(self):
         return self.finqs.filter(answer=F('correct')).count()
+
 
 
 class FinQ(djmodels.Model):
