@@ -14,7 +14,7 @@
     </div>
     <script>
         window.gameParams = {{ view.game_params|json }};
-        window.socket_path = "{{ view.live_url }}";
+        window.socket_path = {{ view.live_url|json }};
     </script>
     {% render_bundle "chunk-vendors" %}
     {% render_bundle "app" %}
