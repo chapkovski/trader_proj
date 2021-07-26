@@ -130,7 +130,7 @@ class Player(BasePlayer):
             self.id_in_group: dict(timestamp=timestamp.strftime('%m_%d_%Y_%H_%M_%S'), action='getServerConfirmation')}
 
     def set_payoffs(self):
-        self.payable_round = random.randint(1, len(Constants.day_params) + 1)
+        self.payable_round = random.randint(1, len(Constants.day_params) )
         last_event_in_payable_round = self.events.filter(round_number=self.payable_round,
                                                          balance__isnull=False).latest()
         self.payoff = last_event_in_payable_round.balance
