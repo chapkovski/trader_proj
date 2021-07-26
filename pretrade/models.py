@@ -24,6 +24,7 @@ with open(r'./data/params.yaml') as file:
     _general_params = yaml.load(file, Loader=yaml.FullLoader)
 with open("data/day_params.csv") as csvfile:
     _day_params = list(DictReader(csvfile))
+import urllib.request
 
 
 class Constants(BaseConstants):
@@ -41,7 +42,10 @@ class Group(BaseGroup):
 
 
 def general_params(subsession: Subsession):
-    gps = _general_params.copy()
+    contents = urllib.request.urlopen(
+        "http://raw.githubusercontent.com/chapkovski/trader_proj/main/data/params.yaml").read()
+    c = yaml.load(contents, Loader=yaml.FullLoader)
+    gps = c.copy()
     numTicks = gps.get('dayLength') / gps.get('tickFrequency')
 
     injected = dict(gamified=subsession.session.config.get('gamified', False),
@@ -53,7 +57,7 @@ def general_params(subsession: Subsession):
                     formatted_prob=gps.get('bonusProbabilityCoef') * 100,
                     example_formatted_prob=(gps.get('example_time_min') / (gps.get('dayLength') / 60) * gps.get(
                         'bonusProbabilityCoef')) * 100,
-                    day_params= _day_params
+                    day_params=_day_params
                     )
     return dict(**gps, **injected)
 
