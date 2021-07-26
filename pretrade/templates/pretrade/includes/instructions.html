@@ -43,7 +43,7 @@
                     <li> You can freely switch between the trading and work tabs at all times during the
                         experiment.
                     </li>
-                    <li> The game progresses over 8 rounds of 3 minutes each.</li>
+                    <li> The game progresses over {{ gps.num_rounds }} rounds of {{ gps.day_length_in_min }} minutes each.</li>
                     <li> In each round, you can earn money either by:
                         <ul>
                             <li> Making a profit through buying and selling assets.</li>
@@ -55,7 +55,7 @@
                     <li> The rounds are independent of each other meaning that your progress (portfolio and bank
                         account) will be reset at the beginning of each round.
                     </li>
-                    <li> After the 8 rounds, you will complete a 10-question quiz on trading and investments. <br>
+                    <li> After the {{ gps.num_rounds }} rounds, you will complete a 10-question quiz on trading and investments. <br>
                         Do not worry if you do not have prior finance knowledge or experience in trading: Just
                         answer to the best of your ability. <br>
                         You will receive a bonus payment for each question you answer correctly on the quiz.
@@ -63,7 +63,7 @@
                     <li> At the end of the experiment, one of the trading rounds will be selected at random as your
                         payment round. <br>
                         You will receive a bonus payment proportional to the wealth in the randomly selected round, at a
-                        rate of 1 E$ = 0.05 CA$ (E$ stands for "experimental dollars").
+                        rate of 1 E$ = {{ gps.real_world_current_per_point }} CA$ (E$ stands for "experimental dollars").
                         So think and play in each round as if it is the round that counts, because it might be!
                     </li>
                 </ol>
@@ -78,31 +78,31 @@
                 Each round, you can trade up to four assets:
                 <ol class="list-group list-group-flush">
                     <li> Two stocks, labelled
-                        <em>ABC</em>
+                        <em>{{ gps.stock_A_name }}</em>
                         and
-                        <em>XYZ</em>
+                        <em>{{ gps.stock_B_name }}</em>
                         .
                         <ol>
                             <li> Stock
-                                <em>XYZ</em>
+                                <em>{{ gps.stock_B_name }}</em>
                                 has a higher expected return (on average, you can anticipate higher gains)
                             </li>
                             <li> But, stock
-                                <em>XYZ</em>
+                                <em>{{ gps.stock_B_name }}</em>
                                 also has a higher volatility (prices swing around more)
                             </li>
                         </ol>
                     <li> Two "leveraged ETFs" which are designed to offer, at each time step, 3 times the return on
                         either
-                        <em>ABC</em>
+                        <em>{{ gps.stock_A_name }}</em>
                         and
-                        <em>XYZ</em>
+                        <em>{{ gps.stock_B_name }}</em>
                         .
                     </li>
-                    <li> Each round, you start with 10 units each of
-                        <em>ABC</em>
+                    <li> Each round, you start with {{ gps.initial_stock_items }} units each of
+                        <em>{{ gps.stock_A_name }}</em>
                         and
-                        <em>XYZ</em>
+                        <em>{{ gps.stock_B_name }}</em>
                     </li>
                 </ol>
 
@@ -148,7 +148,7 @@
             <div class="card-body">
 
                 <ol class="list-group list-group-flush">
-                    <li> Stock prices will refresh every 5 seconds.</li>
+                    <li> Stock prices will refresh every {{ gps.tickFrequency }} seconds.</li>
                     <li> At the beginning of each round, you will be informed of the expected return and expected
                         variability of returns for each stock.
                     </li>
@@ -172,7 +172,7 @@
             <div class="card-body">
 
                 <ol class="list-group list-group-flush">
-                    <li> In the work tab, you complete simple numerical tasks to earn a wage of either 10 E$ or 20 E$,
+                    <li> In the work tab, you complete simple numerical tasks to earn a wage of either {{ gps.fee_low }} E$ or {{ gps.fee_high }} E$,
                         depending on the round you are in.
                     </li>
                     <li> The wage you earn per task will be directly deposited into your bank account balance.</li>
@@ -203,8 +203,9 @@
                         The probability of receiving the free stock is 5% times the proportion of time spent on the
                         trading platform.
                         For example, if you spend 1.5 minutes on the trading platform and 1.5 minutes on the working
-                        task, you receive one unit of either stock ABC or stock XYZ at the end of the round with
-                        probability 1.5/3 * 5% = 2.5%.
+                        task, you receive one unit of either stock {{ gps.stock_A_name }} or stock {{ gps.stock_B_name }} at the end of the round with
+                        probability {{ gps.example_time_min }}/{{ gps.day_length_in_min }} * {{ gps.formatted_prob }}% =
+                            {{ gps.example_formatted_prob }}%.
                     </li>
 
                     {% endif %}

@@ -19,6 +19,8 @@ author = 'Philipp Chapkovski, HSE Moscow, chapkovski@gmail.com'
 doc = """
 Instructions, comprehension check for trader
 """
+with open(r'./data/params.yaml') as file:
+    _general_params = yaml.load(file, Loader=yaml.FullLoader)
 
 
 class Constants(BaseConstants):
@@ -35,6 +37,27 @@ class Group(BaseGroup):
     pass
 
 
+
+
+def general_params(subsession: Subsession):
+    gps = _general_params.copy()
+    numTicks = gps.get('dayLength')/gps.get('tickFrequency')
+
+    injected = dict(gamified=subsession.session.config.get('gamified', False),
+                    numTicks = numTicks,
+                    day_length_in_min,
+                    num_rounds,
+                    real_world_current_per_point,
+                    initial_stock_items,
+                    stock_A_name
+                    stock_B_name,
+                    fee_low,
+    fee_high,
+    example_time_min,
+    formatted_prob
+    example_formatted_prob)
+    return dict(**gps, **injected)
+
 class Player(BasePlayer):
     cq1 = models.StringField(
         label="When can you switch between “Trade” and “Work” tabs?",
@@ -50,9 +73,9 @@ class Player(BasePlayer):
         label="If 5-second returns on Stock A and Stock B are -3% and 1.5% respectively, the corresponding 5-second "
               "leveraged ETF returns are:",
         choices=["9% and 4.5%",
-                "9% and -4.5%",
-                "-9% and 4.5%",
-                "-9% and -4.5%",
+                 "9% and -4.5%",
+                 "-9% and 4.5%",
+                 "-9% and -4.5%",
                  ],
         widget=widgets.RadioSelect
     )
@@ -60,9 +83,9 @@ class Player(BasePlayer):
     cq3 = models.StringField(
         label="What carries over between rounds?",
         choices=["Your trading portfolio",
-                "Your bank account balance",
-                "Both your portfolio and your bank account balance",
-                "Neither your portfolio nor your account balance",
+                 "Your bank account balance",
+                 "Both your portfolio and your bank account balance",
+                 "Neither your portfolio nor your account balance",
                  ],
         widget=widgets.RadioSelect
     )
@@ -70,9 +93,9 @@ class Player(BasePlayer):
     cq4 = models.StringField(
         label="Your total bonus payment for the experiment depends on:",
         choices=["Your trading profit across all rounds",
-                "Your trading profit and total work wages in a randomly selected round",
-                "Your trading profit in a randomly selected round",
-                "Your trading profit and total work wages across all rounds",
+                 "Your trading profit and total work wages in a randomly selected round",
+                 "Your trading profit in a randomly selected round",
+                 "Your trading profit and total work wages across all rounds",
                  ],
         widget=widgets.RadioSelect
     )
@@ -80,12 +103,15 @@ class Player(BasePlayer):
     def cq1_error_message(self, value):
         if value != 'At any point during the round':
             return 'Wrong answer!'
+
     def cq2_error_message(self, value):
         if value != '-9% and 4.5%':
             return 'Wrong answer!'
+
     def cq3_error_message(self, value):
         if value != 'Neither your portfolio nor your account balance':
             return 'Wrong answer!'
+
     def cq4_error_message(self, value):
         if value != 'Your trading profit and total work wages in a randomly selected round':
             return 'Wrong answer!'

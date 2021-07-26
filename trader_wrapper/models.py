@@ -83,45 +83,13 @@ class Constants(BaseConstants):
     bonus_probability_coef = 1 ## multiplies secs_spent_in_trade/total_time by this factor to change the  probability to get extra stocks
     num_stocks_in_bonus = 1 ## number of stocks provided as bonus
     num_ticks = int(day_length_in_seconds / tick_frequency_in_secs)
-    tick = 5  # how often prices are updated (in seconds)
-    stocks = ['A', 'B', 'ETF_A', 'ETF_B']
-    tabs = ['work', 'trade']
-    default_tab = 'trade'
     endowment = 0
-
     num_rounds = 1
+
     with open("data/day_params.csv") as csvfile:
         day_params = list(DictReader(csvfile))
 
-    wages = [10, 20]
-    fees = [0, 1]
-    wages_fees = list(product(wages, fees))
-    stocks_with_params = [
-        dict(name='A',
-             initial=1,
-             sigma=0.2,
-             leverage=1),
-        dict(name='B',
-             initial=1,
-             sigma=0.4,
-             leverage=1
-             ),
-        dict(name='ETF_A',
-             initial=1,
-             sigma=0.2,
-             leverage=3
-             ),
-        dict(name='ETF_B',
-             initial=1,
-             sigma=0.4,
-             leverage=3
-             ),
-    ]
-    awards = {1: dict(name='First transaction',
-                      message='Hooray! you have made your first transaction!'),
-              3: dict(name='Bronze', message='Three transactions! That\'s the spirit!'),
-              5: dict(name='Silver', message='Incredible, George Soros wishes you luck!'),
-              10: dict(name='Gold', message='Warren Buffet envies you!')}
+
 
 
 class Subsession(BaseSubsession):
