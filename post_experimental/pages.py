@@ -69,11 +69,20 @@ class Q(Page):
     form_fields = ['gender',
                    'age',
                    'nationality',
+                   'email',
                    'education',
                    'study_major',
+                   'course_financial',
                    'experiment_before',
                    'trading_experience',
-                   'course_financial']
+                   'online_trading_experience',
+                   'trading_frequency',
+                   'portfolio_frequency',
+                   'asset_class',
+                   'use_leverage',
+                   'purpose',
+                   'difficulty']
+
 
 
 page_sequence = [

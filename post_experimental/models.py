@@ -14,6 +14,7 @@ from django.db.models import F
 from pprint import pprint
 import yaml
 from django_countries.fields import CountryField
+
 author = 'Philipp Chapkovski, HSE Moscow, chapkovski@gmail.com'
 
 doc = """
@@ -30,7 +31,8 @@ class Constants(BaseConstants):
         fqs = yaml.load(file, Loader=yaml.FullLoader)
 
     GENDER_CHOICES = ['Male', 'Female', 'Other']
-    EDUCATION_CHOICES = ['high-school graduate',
+    EDUCATION_CHOICES = ['did not graduate high school',
+                         'high-school graduate',
                          'undergraduate: 1st year',
                          'undergraduate: 2nd year',
                          'undergraduate: 3d year',
@@ -40,7 +42,11 @@ class Constants(BaseConstants):
                          'PhD'
                          ]
     STUDY_MAJOR_CHOICES = ['Finance', 'Economics', 'Other Management', 'Other']
-    COURSE_FINANCIAL_CHOICES = ['No', 'Yes, one', 'Yes, two', 'Yes, three or more']
+    TRADING_FREQUENCY = ["Multiple times a day", "Daily", "Weekly", "Monthly", "Less than once a month"]
+    PORTFOLIO_FREQUENCY = ["Multiple times a day", "Daily", "Weekly", "Monthly", "Less than once a month"]
+    ASSET_CLASS = ["Stocks", "Bonds", "Derivatives (Options, Futures)", "Cryptocurrencies"]
+    USE_LEVERAGE = ["Yes", "No", "Do not know"]
+
 
 class Subsession(BaseSubsession):
     def creating_session(self):
@@ -62,17 +68,31 @@ class Group(BaseGroup):
 
 
 class Player(BasePlayer):
-    gender = models.StringField(choices=Constants.GENDER_CHOICES, widget=widgets.RadioSelectHorizontal,
-                                label='What is your gender?')
-    age = models.IntegerField(label='How old are you?')
-    nationality = CountryField(verbose_name='What is your nationality?', null=True, blank=False )
+    gender = models.StringField(choices=Constants.GENDER_CHOICES, widget=widgets.RadioSelectHorizontal)
+    age = models.IntegerField()
+    email = models.LongStringField(label='E-mail address: ', default='')
+    nationality = CountryField(blank_label='(select country)', default='CA')
     education = models.StringField(choices=Constants.EDUCATION_CHOICES)
     study_major = models.StringField(choices=Constants.STUDY_MAJOR_CHOICES, label='Study major')
+    course_financial = models.BooleanField(label='Did you take any course focused on financial markets')
     experiment_before = models.BooleanField(label='Have you been part of an experiment before?')
     trading_experience = models.BooleanField(label='Do you have any trading experience?')
-    course_financial = models.StringField(choices=Constants.COURSE_FINANCIAL_CHOICES,
-                                          label='Did you take any course focused on financial markets')
-    def get_correct_quiz_questions_num(self):
+    online_trading_experience = models.BooleanField(label='Do you use mobile trading apps?')
+    trading_frequency = models.StringField(choices=Constants.TRADING_FREQUENCY,
+                                           label='How often do you trade online?')
+    portfolio_frequency = models.StringField(choices=Constants.PORTFOLIO_FREQUENCY,
+                                             label='How often do you check the value of your portfolio?')
+    asset_class = models.StringField(choices=Constants.ASSET_CLASS,
+                                     label='Which asset class do you trade the most?')
+    use_leverage = models.StringField(choices=Constants.USE_LEVERAGE,
+                                      label='Do you use leverage (e.g., trading on margin)?')
+
+    # Feedback questions
+    purpose = models.LongStringField(label='What do you think is the purpose of this study?', default='')
+    difficulty = models.LongStringField(label='Did you encounter any difficulty throughout the experiment?', default='')
+
+
+def get_correct_quiz_questions_num(self):
         return self.finqs.filter(answer=F('correct')).count()
 
 
