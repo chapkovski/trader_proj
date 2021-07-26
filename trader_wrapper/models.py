@@ -126,6 +126,7 @@ class Player(BasePlayer):
                            round_number=data.pop('round_number', None),
                            body=json.dumps(data),
                            )
+        print("TOTAL NUMBER OF EVENTS SO FAR:: ", self.events.count())
         return {
             self.id_in_group: dict(timestamp=timestamp.strftime('%m_%d_%Y_%H_%M_%S'), action='getServerConfirmation')}
 
