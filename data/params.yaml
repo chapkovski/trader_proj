@@ -5,7 +5,7 @@ bonusProbabilityCoef: 0.05
 numStocksInBonus: 1
 workDictLength: 6
 taskLength: 4
-initial_stock_items: 10
+initial_stock_items: 20
 stock_A_name: ABC  # ATTENTION: if you change this parameter DO NOT FORGET TO CHANGE the name in pricer. It is not autmoatically synchronized
 stock_B_name: XYZ  # ATTENTION: if you change this parameter DO NOT FORGET TO CHANGE the name in pricer. It is not autmoatically synchronized
 fee_low: 10   # ATTENTION: if you change this parameter DO NOT FORGET TO CHANGE this in day_params.
