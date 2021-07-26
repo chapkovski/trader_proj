@@ -46,6 +46,10 @@ def general_params(subsession: Subsession):
         "http://raw.githubusercontent.com/chapkovski/trader_proj/main/data/params.yaml").read()
     c = yaml.load(contents, Loader=yaml.FullLoader)
     gps = c.copy()
+    day_params_url ='http://raw.githubusercontent.com/chapkovski/trader_proj/main/data/day_params.csv'
+    day_params_req = urllib.request.urlopen(day_params_url).read().decode('utf-8')
+    cr = DictReader(day_params_req.splitlines())
+    _day_params = list(cr)
     numTicks = gps.get('dayLength') / gps.get('tickFrequency')
 
     injected = dict(gamified=subsession.session.config.get('gamified', False),
