@@ -29,7 +29,7 @@
     - False
     - Don't know / Not sure
     - Prefer not to say
-  correct: 1
+  correct: 0
 - label: Do you think the following statement is true or false? Buying a single company stock usually provides a safer return than a stock mutual fund.
   choices:
     - True
@@ -43,7 +43,7 @@
     - Exactly 6%
     - Greater than 6%
     - Less than 6%
-  correct: 0
+  correct: 1
 - label: A portfolio invests equally (50/50) in two funds, Stones and Sticks. The return from Stones fluctuates by about 5% year-to-year and the return from Sticks also fluctuates by about 5% year-to-year. They don't move perfectly in tandem, however (i.e., they are not perfectly correlated). What is the typical year-to-year fluctuation for the portfolio?
   choices:
     - Exactly 5%
