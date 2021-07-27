@@ -14,11 +14,10 @@ from django.db import models as djmodels
 from datetime import datetime, timedelta
 from django.utils import timezone
 from enum import Enum
-from dateutil.relativedelta import relativedelta
-from .prices import get_prices
+from pretrade.models import general_params
 import os
 import csv
-from itertools import product
+
 import json
 from csv import DictReader
 
@@ -63,7 +62,6 @@ class Direction(int, Enum):
     sell = -1
 
 
-import requests
 
 
 class AttrDict(dict):
@@ -98,8 +96,6 @@ class Subsession(BaseSubsession):
     def get_params(self):
         return json.loads(self.params)
 
-    def creating_session(self):
-        pass
 
 
 class Group(BaseGroup):
@@ -126,12 +122,14 @@ class Player(BasePlayer):
                            round_number=data.pop('round_number', None),
                            body=json.dumps(data),
                            )
-        print("TOTAL NUMBER OF EVENTS SO FAR:: ", self.events.count())
+
         return {
             self.id_in_group: dict(timestamp=timestamp.strftime('%m_%d_%Y_%H_%M_%S'), action='getServerConfirmation')}
 
     def set_payoffs(self):
-        self.payable_round = random.randint(1, len(Constants.day_params) )
+        day_params = general_params().get('day_params')
+        num_rounds = len(day_params)
+        self.payable_round = random.randint(1, num_rounds)
         last_event_in_payable_round = self.events.filter(round_number=self.payable_round,
                                                          balance__isnull=False).latest()
         self.payoff = last_event_in_payable_round.balance
