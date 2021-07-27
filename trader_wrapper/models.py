@@ -127,7 +127,7 @@ class Player(BasePlayer):
             self.id_in_group: dict(timestamp=timestamp.strftime('%m_%d_%Y_%H_%M_%S'), action='getServerConfirmation')}
 
     def set_payoffs(self):
-        day_params = general_params().get('day_params')
+        day_params = general_params(subsession=self.subsession).get('day_params')
         num_rounds = len(day_params)
         self.payable_round = random.randint(1, num_rounds)
         last_event_in_payable_round = self.events.filter(round_number=self.payable_round,
