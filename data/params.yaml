@@ -3,7 +3,7 @@ dayLength: 15
 tickFrequency: 5
 bonusProbabilityCoef: 0.05
 numStocksInBonus: 1
-workDictLength: 12
+workDictLength: 10
 taskLength: 6
 initial_stock_items: 10
 stock_A_name: ABC  # ATTENTION: if you change this parameter DO NOT FORGET TO CHANGE the name in pricer. It is not autmoatically synchronized
