@@ -1,5 +1,5 @@
-endowment: 0
-dayLength: 15
+endowment: 10
+dayLength: 150
 tickFrequency: 5
 bonusProbabilityCoef: 0.05
 numStocksInBonus: 1
