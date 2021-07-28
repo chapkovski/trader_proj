@@ -75,7 +75,7 @@ class Player(BasePlayer):
     education = models.StringField(choices=Constants.EDUCATION_CHOICES)
     study_major = models.StringField(choices=Constants.STUDY_MAJOR_CHOICES, label='Study major')
     course_financial = models.BooleanField(label='Did you take any course focused on financial markets')
-    experiment_before = models.BooleanField(label='Have you been part of an experiment before?')
+    experiment_before = models.BooleanField(label='Have you been taken part in an experiment before?')
     trading_experience = models.BooleanField(label='Do you have any trading experience?')
     online_trading_experience = models.BooleanField(label='Do you use mobile trading apps?')
     trading_frequency = models.StringField(choices=Constants.TRADING_FREQUENCY,
