@@ -50,9 +50,8 @@
     - Less than 5%
     - No way to know
     - Greater than 5%
-    - Less than 6%
   correct: 1
-- label: You invest $500 to buy $1,000 worth of stock on margin. The value of the stock drops by 50%. You sell it. Approximately how much of your original $500 investment are you left with in the end?
+- label: You invest $500 to buy $1,000 worth of stock on margin (that is, you borrowed $500 from your broker to purchase stock). The value of the stock drops by 50%. You sell it. Approximately how much of your original $500 investment are you left with in the end?
   choices:
     - $500
     - $250
