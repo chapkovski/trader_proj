@@ -5,7 +5,7 @@ from django.forms import inlineformset_factory
 from django import forms
 import json
 from otree.api import widgets
-
+from django.shortcuts import redirect
 
 # form for fin qs
 
@@ -82,11 +82,19 @@ class Q(Page):
                    'use_leverage',
                    'purpose',
                    'difficulty']
+class FinalForProlific(Page):
+    def is_displayed(self):
+        return self.session.config.get('for_prolific')
+
+    def get(self):
+        return redirect(self.session.config.get('prolific_redirect_url'))
+
 
 
 
 page_sequence = [
     FinQuiz,
     Q,
-    Results
+    Results,
+FinalForProlific
 ]

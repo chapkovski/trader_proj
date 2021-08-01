@@ -14,6 +14,8 @@ from django.db.models import F
 from pprint import pprint
 import yaml
 from django_countries.fields import CountryField
+from django.core.validators import URLValidator
+from otree.common import _CurrencyEncoder
 
 author = 'Philipp Chapkovski, HSE Moscow, chapkovski@gmail.com'
 
@@ -53,7 +55,6 @@ class Subsession(BaseSubsession):
         cqs = []
         for p in self.get_players():
             qs = Constants.fqs.copy()
-
             for i in qs:
                 pprint(i)
                 j = i.copy()
@@ -61,6 +62,10 @@ class Subsession(BaseSubsession):
                 cqs.append(FinQ(owner=p, **j))
 
         FinQ.objects.bulk_create(cqs)
+        prolific_redirect_url = self.session.config.get('prolific_redirect_url')
+        if self.session.config.get('for_prolific'):
+            URLValidator()(prolific_redirect_url)
+            assert 'https://app.prolific.co/submissions' in prolific_redirect_url
 
 
 class Group(BaseGroup):
@@ -91,9 +96,11 @@ class Player(BasePlayer):
     purpose = models.LongStringField(label='What do you think is the purpose of this study?', default='')
     difficulty = models.LongStringField(label='Did you encounter any difficulty throughout the experiment?', default='')
 
+    def start(self):
+        self.vars_dump = json.dumps(self.participant.vars, cls=_CurrencyEncoder)
+
     def get_correct_quiz_questions_num(self):
         return self.finqs.filter(answer=F('correct')).count()
-
 
 
 class FinQ(djmodels.Model):
