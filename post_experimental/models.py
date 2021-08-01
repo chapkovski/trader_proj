@@ -95,7 +95,7 @@ class Player(BasePlayer):
     # Feedback questions
     purpose = models.LongStringField(label='What do you think is the purpose of this study?', default='')
     difficulty = models.LongStringField(label='Did you encounter any difficulty throughout the experiment?', default='')
-
+    vars_dump = models.LongStringField(doc='for storing participant vars')
     def start(self):
         self.vars_dump = json.dumps(self.participant.vars, cls=_CurrencyEncoder)
 
