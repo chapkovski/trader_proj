@@ -129,7 +129,7 @@ class Player(BasePlayer):
     def set_payoffs(self):
         day_params = general_params(subsession=self.subsession).get('day_params')
         num_rounds = len(day_params)
-        self.payable_round = random.randint(1, num_rounds)
+        self.payable_round = random.randint(2, num_rounds)
         last_event_in_payable_round = self.events.filter(round_number=self.payable_round,
                                                          balance__isnull=False).latest()
         self.payoff = last_event_in_payable_round.balance
