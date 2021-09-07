@@ -62,8 +62,6 @@ class Direction(int, Enum):
     sell = -1
 
 
-
-
 class AttrDict(dict):
     def __init__(self, *args, **kwargs):
         super(AttrDict, self).__init__(*args, **kwargs)
@@ -76,26 +74,37 @@ class Constants(BaseConstants):
     trading_day_duration = 5  # in minutes
     day_length_in_seconds = 180
     tick_frequency_in_secs = 5
-    work_dict_length = 6 # these two parameters define the difficulty of decoding task
-    task_length = 4 # these two parameters define the difficulty of decoding task
-    bonus_probability_coef = 1 ## multiplies secs_spent_in_trade/total_time by this factor to change the  probability to get extra stocks
-    num_stocks_in_bonus = 1 ## number of stocks provided as bonus
+    work_dict_length = 6  # these two parameters define the difficulty of decoding task
+    task_length = 4  # these two parameters define the difficulty of decoding task
+    bonus_probability_coef = 1  ## multiplies secs_spent_in_trade/total_time by this factor to change the  probability to get extra stocks
+    num_stocks_in_bonus = 1  ## number of stocks provided as bonus
     num_ticks = int(day_length_in_seconds / tick_frequency_in_secs)
     endowment = 0
-    num_rounds = 1
+    num_rounds = 2
 
     with open("data/day_params.csv") as csvfile:
         day_params = list(DictReader(csvfile))
 
 
+from itertools import cycle
 
 
 class Subsession(BaseSubsession):
     params = models.LongStringField()
 
+    def creating_session(self):
+        orders = [[True, False], [False, True]]
+        cyorders = cycle(orders)
+        if self.round_number == 1:
+            for p in self.session.get_participants():
+                p.vars['treatment_order'] = next(cyorders)
+
+        for p in self.get_players():
+            p.chosen_part = random.randint(1, Constants.num_rounds)
+            p.gamified = p.participant.vars['treatment_order'][self.round_number - 1]
+
     def get_params(self):
         return json.loads(self.params)
-
 
 
 class Group(BaseGroup):
@@ -106,22 +115,26 @@ class Player(BasePlayer):
     """In production we may not need theses two fields, but it is still useful to have them
     as natural limits after which the player should proceed to the next trading day.
     """
+    chosen_part = models.IntegerField()
     start_time = djmodels.DateTimeField(null=True, blank=True)
     end_time = djmodels.DateTimeField(null=True, blank=True)
     payable_round = models.IntegerField()
+    gamified = models.BooleanField()
 
     def register_event(self, data):
         print('WE GET THE DATA', data)
         timestamp = timezone.now()
         balance = float(data.pop('balance', 0))
-        self.events.create(owner=self,
-                           timestamp=timestamp,
-                           source='client',
-                           name=data.pop('name', ''),
-                           balance=balance,
-                           round_number=data.pop('round_number', None),
-                           body=json.dumps(data),
-                           )
+        self.events.create(
+            part_number=self.round_number,
+            owner=self,
+            timestamp=timestamp,
+            source='client',
+            name=data.pop('name', ''),
+            balance=balance,
+            round_number=data.pop('round_number', None),
+            body=json.dumps(data),
+        )
 
         return {
             self.id_in_group: dict(timestamp=timestamp.strftime('%m_%d_%Y_%H_%M_%S'), action='getServerConfirmation')}
@@ -133,8 +146,11 @@ class Player(BasePlayer):
         last_event_in_payable_round = self.events.filter(round_number=self.payable_round,
                                                          balance__isnull=False).latest()
         self.payoff = last_event_in_payable_round.balance
-        self.participant.vars['chosen_round'] = self.payable_round
-        self.participant.vars['trading_payoff'] = self.payoff
+        if self.round_number == Constants.num_rounds:
+            payable_part = self.in_round(self.chosen_part)
+            self.participant.vars['chosen_part'] = self.chosen_part
+            self.participant.vars['chosen_round'] = payable_part.payable_round
+            self.participant.vars['trading_payoff'] = payable_part.payoff
 
 
 class Event(djmodels.Model):
@@ -142,6 +158,7 @@ class Event(djmodels.Model):
         ordering = ['timestamp']
         get_latest_by = 'timestamp'
 
+    part_number = models.IntegerField()
     owner = djmodels.ForeignKey(to=Player, on_delete=djmodels.CASCADE, related_name='events')
     source = models.StringField(doc='can be either inner (due to some internal processes) or from client')
     name = models.StringField()
@@ -157,7 +174,6 @@ def custom_export(players):
     field_names = [i.name for i in all_fields]
 
     player_fields = ['participant_code',
-
                      'session_code',
                      'treatment']
     yield field_names + player_fields

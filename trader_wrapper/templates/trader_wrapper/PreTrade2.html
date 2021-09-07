@@ -1,0 +1,31 @@
+{% extends "global/Page.html" %}
+{% load otree static %}
+
+{% load render_bundle from webpack_loader %}
+
+
+{% block title %}
+    Part 2
+{% endblock %}
+{% block content %}
+    <div class="card my-3">
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    In the next page you will have to do a series of tasks, similar to what you have done in Part 1.
+                </li>
+
+                <li class="list-group-item">
+                    Please remember that only <b>one</b> of these two parts will be selected randomly for defining your
+                    bonus.
+                </li>
+
+                <li class="list-group-item">
+                    Please click 'Next' to proceed to Part 1.
+                </li>
+            </ul>
+        </div>
+    </div>
+<div class="my-3">    {% next_button %}
+</div>
+{% endblock %}

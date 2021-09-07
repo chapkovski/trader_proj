@@ -14,23 +14,15 @@ SESSION_CONFIGS = [
     dict(
         name='pretrade',
         display_name="Pre-trade (instructions, comprehension)",
-        num_demo_participants=1,
+        num_demo_participants=2,
         app_sequence=['pretrade'],
 
     ),
-    dict(
-        name='baseline',
-        display_name="trader ONLY - baseline",
-        num_demo_participants=1,
-        app_sequence=['trader_wrapper'],
-        gamified=False,
-
-    ),
 
     dict(
-        name='gamified',
-        display_name="trader ONLY - gamified",
-        num_demo_participants=1,
+        name='traderonlhy',
+        display_name="trader ONLY - within-subject",
+        num_demo_participants=2,
         app_sequence=['trader_wrapper'],
         gamified=True,
     ),
@@ -38,25 +30,16 @@ SESSION_CONFIGS = [
     dict(
         name='post',
         display_name="post-experimental (quiz, SES)",
-        num_demo_participants=1,
+        num_demo_participants=2,
         app_sequence=['post_experimental'],
 
     ),
     dict(
         name='full_baseline',
-        display_name="FULL STUDY - baseline",
-        num_demo_participants=1,
+        display_name="FULL STUDY - within-subject",
+        num_demo_participants=2,
         app_sequence=default_app_seq,
-        gamified=False,
 
-    ),
-
-    dict(
-        name='full_gamified',
-        display_name="FULL STUDY - gamified",
-        num_demo_participants=1,
-        app_sequence=default_app_seq,
-        gamified=True,
     ),
 
 ]

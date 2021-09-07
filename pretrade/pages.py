@@ -5,7 +5,7 @@ from .models import general_params
 
 class GeneralPage(Page):
     def vars_for_template(self):
-        return dict(gps=general_params(self.subsession))
+        return dict(gps=general_params(self.player))
 
 
 class CQPage(GeneralPage):

@@ -1,0 +1,33 @@
+{% extends "global/Page.html" %}
+{% load otree static %}
+
+
+{% block title %}
+    Part 1
+{% endblock %}
+{% block content %}
+    <div class="card my-3">
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    This study consists of two parts, almost identical to each other. Each part consists of series of
+                    periods.
+                </li>
+
+                <li class="list-group-item">
+                    Only <b>one</b> of these two parts will be selected randomly for defining your
+                    bonus.
+                </li>
+
+
+
+
+                <li class="list-group-item">
+                    Please click 'Next' to proceed to Part 1.
+                </li>
+            </ul>
+        </div>
+    </div>
+<div class="my-3">    {% next_button %}
+</div>
+{% endblock %}

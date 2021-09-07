@@ -41,32 +41,7 @@ class Group(BaseGroup):
     pass
 
 
-def general_params(subsession: Subsession):
-    contents = urllib.request.urlopen(
-        "http://raw.githubusercontent.com/chapkovski/trader_proj/main/data/params.yaml").read()
-    c = yaml.load(contents, Loader=yaml.FullLoader)
-    gps = c.copy()
-    # gps = _general_params.copy() # UNCOMMENT FOR LOCAL testing
-    day_params_url ='http://raw.githubusercontent.com/chapkovski/trader_proj/main/data/day_params.csv'
-    day_params_req = urllib.request.urlopen(day_params_url).read().decode('utf-8')
-    cr = DictReader(day_params_req.splitlines())
 
-
-    _day_params = list(cr) # COMMENt out FOR LOCAL testing
-    numTicks = gps.get('dayLength') / gps.get('tickFrequency')
-
-    injected = dict(gamified=subsession.session.config.get('gamified', False),
-                    numTicks=numTicks,
-                    day_length_in_min=gps.get('dayLength') / 60,
-                    num_rounds=len(_day_params),
-                    real_world_currency_per_point=subsession.session.config.get('real_world_currency_per_point'),
-                    example_work_time_min=gps.get('dayLength') / 60 - gps.get('example_time_min'),
-                    formatted_prob=gps.get('bonusProbabilityCoef') * 100,
-                    example_formatted_prob=(gps.get('example_time_min') / (gps.get('dayLength') / 60) * gps.get(
-                        'bonusProbabilityCoef')) * 100,
-                    day_params=_day_params
-                    )
-    return dict(**gps, **injected)
 
 
 class Player(BasePlayer):
@@ -126,3 +101,30 @@ class Player(BasePlayer):
     def cq4_error_message(self, value):
         if value != 'Your trading profit and total work wages in a randomly selected round':
             return 'Wrong answer!'
+def general_params(player: Player):
+    subsession=player.subsession
+    contents = urllib.request.urlopen(
+        "http://raw.githubusercontent.com/chapkovski/trader_proj/main/data/params.yaml").read()
+    c = yaml.load(contents, Loader=yaml.FullLoader)
+    gps = c.copy()
+    # gps = _general_params.copy() # UNCOMMENT FOR LOCAL testing
+    day_params_url ='http://raw.githubusercontent.com/chapkovski/trader_proj/main/data/day_params.csv'
+    day_params_req = urllib.request.urlopen(day_params_url).read().decode('utf-8')
+    cr = DictReader(day_params_req.splitlines())
+
+
+    _day_params = list(cr) # COMMENt out FOR LOCAL testing
+    numTicks = gps.get('dayLength') / gps.get('tickFrequency')
+
+    injected = dict(gamified=player.gamified,
+                    numTicks=numTicks,
+                    day_length_in_min=gps.get('dayLength') / 60,
+                    num_rounds=len(_day_params),
+                    real_world_currency_per_point=subsession.session.config.get('real_world_currency_per_point'),
+                    example_work_time_min=gps.get('dayLength') / 60 - gps.get('example_time_min'),
+                    formatted_prob=gps.get('bonusProbabilityCoef') * 100,
+                    example_formatted_prob=(gps.get('example_time_min') / (gps.get('dayLength') / 60) * gps.get(
+                        'bonusProbabilityCoef')) * 100,
+                    day_params=_day_params
+                    )
+    return dict(**gps, **injected)

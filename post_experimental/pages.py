@@ -57,6 +57,7 @@ class FinQuiz(Page):
 class Results(Page):
     def vars_for_template(self):
         return dict(
+            chosen_part=self.participant.vars.get('chosen_round', ''),
             chosen_round=self.participant.vars.get('chosen_round', ''),
             trading_payoff=self.participant.vars.get('trading_payoff', ''),
             correct_quiz_questions=self.player.get_correct_quiz_questions_num(),
