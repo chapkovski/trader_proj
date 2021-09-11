@@ -37,8 +37,8 @@ class Trader(GeneralPage):
 
 
 page_sequence = [
-    # PreTrade1,
-    # PreTrade2,
-    # BestTrader,
+    PreTrade1,
+    PreTrade2,
+    BestTrader,
     Trader,
 ]
