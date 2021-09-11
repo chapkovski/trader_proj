@@ -140,9 +140,14 @@ class Player(BasePlayer):
             self.id_in_group: dict(timestamp=timestamp.strftime('%m_%d_%Y_%H_%M_%S'), action='getServerConfirmation')}
 
     def set_payoffs(self):
-        day_params = general_params(subsession=self.subsession).get('day_params')
+        day_params = general_params(player=self).get('day_params')
+
         num_rounds = len(day_params)
-        self.payable_round = random.randint(2, num_rounds)
+
+        if num_rounds > 1:
+            self.payable_round = random.randint(2, num_rounds)
+        else:
+            self.payable_round = 1  ## it's an ugly fix for debugging only.
         last_event_in_payable_round = self.events.filter(round_number=self.payable_round,
                                                          balance__isnull=False).latest()
         self.payoff = last_event_in_payable_round.balance
