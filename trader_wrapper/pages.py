@@ -6,18 +6,9 @@ from pretrade.models import general_params
 from pretrade.pages import GeneralPage
 
 
-class PreTrade1(Page):
-    def is_displayed(self):
-        return self.round_number == 1
 
 
-class PreTrade2(Page):
-    def is_displayed(self):
-        return self.round_number == 2
 
-class BestTrader(Page):
-    def is_displayed(self):
-        return self.player.gamified
 
 from pprint import pprint
 class Trader(GeneralPage):
@@ -37,8 +28,6 @@ class Trader(GeneralPage):
 
 
 page_sequence = [
-    PreTrade1,
-    PreTrade2,
-    BestTrader,
+
     Trader,
 ]

@@ -102,6 +102,7 @@ class Player(BasePlayer):
         if value != 'Your trading profit and total work wages in a randomly selected round':
             return 'Wrong answer!'
 def general_params(player: Player):
+    gamified = getattr(player, 'gamified',False)
     subsession=player.subsession
     contents = urllib.request.urlopen(
         "http://raw.githubusercontent.com/chapkovski/trader_proj/main/data/params.yaml").read()
@@ -116,7 +117,7 @@ def general_params(player: Player):
     _day_params = list(cr) # COMMENt out FOR LOCAL testing
     numTicks = gps.get('dayLength') / gps.get('tickFrequency')
 
-    injected = dict(gamified=player.gamified,
+    injected = dict(gamified=gamified,
                     numTicks=numTicks,
                     day_length_in_min=gps.get('dayLength') / 60,
                     num_rounds=len(_day_params),
