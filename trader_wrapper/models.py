@@ -95,6 +95,8 @@ def flatten(t):
     return [item for sublist in t for item in sublist]
 
 
+from pprint import pprint
+
 
 class Subsession(BaseSubsession):
     params = models.LongStringField()
@@ -107,31 +109,33 @@ class Subsession(BaseSubsession):
         c = yaml.load(contents, Loader=yaml.FullLoader)
         gps = c.copy()
 
-
         num_days = gps.get('num_days', 5)
+        pprint(num_days)
+        pprint('-000000000000')
         training_wage = gps.get('training_wage', 5)
         commission = gps.get('commission', 0)
         wages = gps.get('wages', [1, 10])
         treatment_size = int((num_days - 1) / 2)
         assert num_days % 2 == 1, 'Number of trading days should be an odd number'
-        assert num_days == 1 or treatment_size == len(wages), 'Please check the length of wages parameter - it should contain the wages' \
-                                             ' for each trading day'
+        assert num_days == 1 or treatment_size == len(
+            wages), 'Please check the length of wages parameter - it should contain the wages' \
+                    ' for each trading day'
 
         for p in self.get_players():
             day_params = [dict(round=1, gamified=False, wage=training_wage, commission=commission)]
-            treatment_chunks = [[False, False], [True, True]]
-            random.shuffle(treatment_chunks)
+            if treatment_size > 1:
+                treatment_chunks = [[False] * treatment_size, [True] * treatment_size]
+                random.shuffle(treatment_chunks)
 
-            treatment_chunks = flatten(treatment_chunks)
-            treatment_chunks = treatment_chunks
-            wages_chunks = flatten([random.sample(wages, len(wages))] * 2)
-            res = [dict(wage=wage, gamified=gamified, commission=commission) for wage, gamified in
-                   zip(wages_chunks, treatment_chunks)]
-            for i, j in enumerate(res, start=2):
-                j['round'] = i
-            day_params.extend(res)
+                treatment_chunks = flatten(treatment_chunks)
+                treatment_chunks = treatment_chunks
+                wages_chunks = flatten([random.sample(wages, len(wages))] * 2)
+                res = [dict(wage=wage, gamified=gamified, commission=commission) for wage, gamified in
+                       zip(wages_chunks, treatment_chunks)]
+                for i, j in enumerate(res, start=2):
+                    j['round'] = i
+                day_params.extend(res)
             p.day_params = json.dumps(day_params)
-
 
     def get_params(self):
         return json.loads(self.params)
@@ -146,13 +150,10 @@ class Player(BasePlayer):
     as natural limits after which the player should proceed to the next trading day.
     """
 
-
     start_time = djmodels.DateTimeField(null=True, blank=True)
     end_time = djmodels.DateTimeField(null=True, blank=True)
     payable_round = models.IntegerField()
     day_params = models.LongStringField()
-
-
 
     def register_event(self, data):
         print('WE GET THE DATA', data)
