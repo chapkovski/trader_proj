@@ -101,7 +101,7 @@ class Player(BasePlayer):
             return 'Wrong answer!'
 import json
 def general_params(player: Player):
-    gamified = getattr(player, 'gamified',False)
+
     subsession=player.subsession
     contents = urllib.request.urlopen(
         "http://raw.githubusercontent.com/chapkovski/trader_proj/main/data/params.yaml").read()
@@ -110,12 +110,14 @@ def general_params(player: Player):
     # gps = _general_params.copy() # UNCOMMENT FOR LOCAL testing
 
     numTicks = gps.get('dayLength') / gps.get('tickFrequency')
-    _day_params = json.loads(getattr(player, 'day_params', "{}"))
-
-    injected = dict(
+    _day_params = json.loads(getattr(player, 'day_params', "[]"))
+    gamified_rounds = [i.get('round') for i in _day_params if i.get('gamified')]
+    print('GAMIFIED ROUDNS',gamified_rounds)
+    fee_low, fee_high= gps.get('wages')[:2]
+    injected = dict(fee_low=fee_low,
+                    fee_high=fee_high,
                     numTicks=numTicks,
                     day_length_in_min=gps.get('dayLength') / 60,
-                    num_rounds=len(_day_params),
                     real_world_currency_per_point=subsession.session.config.get('real_world_currency_per_point'),
                     example_work_time_min=gps.get('dayLength') / 60 - gps.get('example_time_min'),
                     formatted_prob=gps.get('bonusProbabilityCoef') * 100,
