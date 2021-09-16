@@ -80,7 +80,7 @@ class Constants(BaseConstants):
     num_stocks_in_bonus = 1  ## number of stocks provided as bonus
     num_ticks = int(day_length_in_seconds / tick_frequency_in_secs)
     endowment = 0
-    num_rounds = 2
+    num_rounds = 1
 
     with open("data/day_params.csv") as csvfile:
         day_params = list(DictReader(csvfile))
@@ -89,6 +89,10 @@ class Constants(BaseConstants):
 from itertools import cycle
 import urllib.request
 import yaml
+
+
+def flatten(t):
+    return [item for sublist in t for item in sublist]
 
 
 class Subsession(BaseSubsession):
@@ -103,19 +107,28 @@ class Subsession(BaseSubsession):
         gps = c.copy()
 
         num_days = gps.get('num_days', 5)
-        assert num_days % 2 == 1, 'Number of trading days should be an odd number'
         training_wage = gps.get('training_wage', 5)
         commission = gps.get('commission', 0)
-        day_params = [dict(round=1, wage=training_wage, commission=commission)]
-        for i in range(2, num_days + 1):
-            day_params
-        print("JOPA", day_params)
+        wages = gps.get('wages', [1, 10])
+        treatment_size = int((num_days - 1) / 2)
+        assert num_days % 2 == 1, 'Number of trading days should be an odd number'
+        assert treatment_size == len(wages), 'Please check the length of wages parameter - it should contain the wages' \
+                                             ' for each trading day'
 
-        if self.round_number == 1:
-            for p in self.session.get_participants():
-                p.vars['treatment_order'] = next(cyorders)
+        for p in self.get_players():
+            day_params = [dict(round=1, gamified=False, wage=training_wage, commission=commission)]
+            treatment_chunks = [[False, False], [True, True]]
+            random.shuffle(treatment_chunks)
 
-        # for p in self.get_players():
+            treatment_chunks = flatten(treatment_chunks)
+            treatment_chunks = treatment_chunks
+            wages_chunks = flatten([random.sample(wages, len(wages))] * 2)
+            res = [dict(wage=wage, gamified=gamified, commission=commission) for wage, gamified in
+                   zip(wages_chunks, treatment_chunks)]
+            for i, j in enumerate(res, start=2):
+                j['round'] = i
+            day_params.extend(res)
+            p.day_params = json.dumps(day_params)
 
     def get_params(self):
         return json.loads(self.params)
@@ -164,11 +177,8 @@ class Player(BasePlayer):
         last_event_in_payable_round = self.events.filter(round_number=self.payable_round,
                                                          balance__isnull=False).latest()
         self.payoff = last_event_in_payable_round.balance
-        if self.round_number == Constants.num_rounds:
-            payable_part = self.in_round(self.chosen_part)
-            self.participant.vars['chosen_part'] = self.chosen_part
-            self.participant.vars['chosen_round'] = payable_part.payable_round
-            self.participant.vars['trading_payoff'] = payable_part.payoff
+        self.participant.vars['chosen_round'] = self.payable_round
+        self.participant.vars['trading_payoff'] = self.payoff
 
 
 class Event(djmodels.Model):
