@@ -115,11 +115,11 @@ class Player(BasePlayer):
     """In production we may not need theses two fields, but it is still useful to have them
     as natural limits after which the player should proceed to the next trading day.
     """
-    chosen_part = models.IntegerField()
+
     start_time = djmodels.DateTimeField(null=True, blank=True)
     end_time = djmodels.DateTimeField(null=True, blank=True)
     payable_round = models.IntegerField()
-    gamified = models.BooleanField()
+
 
     def register_event(self, data):
         print('WE GET THE DATA', data)
