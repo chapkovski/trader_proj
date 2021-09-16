@@ -87,6 +87,8 @@ class Constants(BaseConstants):
 
 
 from itertools import cycle
+import urllib.request
+import yaml
 
 
 class Subsession(BaseSubsession):
@@ -95,13 +97,25 @@ class Subsession(BaseSubsession):
     def creating_session(self):
         orders = [[True, False], [False, True]]
         cyorders = cycle(orders)
+        contents = urllib.request.urlopen(
+            "http://raw.githubusercontent.com/chapkovski/trader_proj/main/data/params.yaml").read()
+        c = yaml.load(contents, Loader=yaml.FullLoader)
+        gps = c.copy()
+
+        num_days = gps.get('num_days', 5)
+        assert num_days % 2 == 1, 'Number of trading days should be an odd number'
+        training_wage = gps.get('training_wage', 5)
+        commission = gps.get('commission', 0)
+        day_params = [dict(round=1, wage=training_wage, commission=commission)]
+        for i in range(2, num_days + 1):
+            day_params
+        print("JOPA", day_params)
+
         if self.round_number == 1:
             for p in self.session.get_participants():
                 p.vars['treatment_order'] = next(cyorders)
 
-        for p in self.get_players():
-            p.chosen_part = random.randint(1, Constants.num_rounds)
-            p.gamified = p.participant.vars['treatment_order'][self.round_number - 1]
+        # for p in self.get_players():
 
     def get_params(self):
         return json.loads(self.params)
@@ -115,11 +129,10 @@ class Player(BasePlayer):
     """In production we may not need theses two fields, but it is still useful to have them
     as natural limits after which the player should proceed to the next trading day.
     """
-
+    day_params = models.LongStringField()
     start_time = djmodels.DateTimeField(null=True, blank=True)
     end_time = djmodels.DateTimeField(null=True, blank=True)
     payable_round = models.IntegerField()
-
 
     def register_event(self, data):
         print('WE GET THE DATA', data)
