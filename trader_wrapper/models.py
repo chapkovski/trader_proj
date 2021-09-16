@@ -89,14 +89,12 @@ class Constants(BaseConstants):
 from itertools import cycle
 import urllib.request
 import yaml
-<<<<<<< HEAD
-=======
 
 
 def flatten(t):
     return [item for sublist in t for item in sublist]
 
->>>>>>> trad99
+
 
 class Subsession(BaseSubsession):
     params = models.LongStringField()
@@ -108,15 +106,7 @@ class Subsession(BaseSubsession):
             "http://raw.githubusercontent.com/chapkovski/trader_proj/main/data/params.yaml").read()
         c = yaml.load(contents, Loader=yaml.FullLoader)
         gps = c.copy()
-<<<<<<< HEAD
-        print("JOPA", gps)
-        for p in self.session.get_participants():
-            p.vars['treatment_order'] = next(cyorders)
 
-        for p in self.get_players():
-
-            p.gamified = p.participant.vars['treatment_order'][self.round_number - 1]
-=======
 
         num_days = gps.get('num_days', 5)
         training_wage = gps.get('training_wage', 5)
@@ -124,7 +114,7 @@ class Subsession(BaseSubsession):
         wages = gps.get('wages', [1, 10])
         treatment_size = int((num_days - 1) / 2)
         assert num_days % 2 == 1, 'Number of trading days should be an odd number'
-        assert treatment_size == len(wages), 'Please check the length of wages parameter - it should contain the wages' \
+        assert num_days == 1 or treatment_size == len(wages), 'Please check the length of wages parameter - it should contain the wages' \
                                              ' for each trading day'
 
         for p in self.get_players():
@@ -141,7 +131,7 @@ class Subsession(BaseSubsession):
                 j['round'] = i
             day_params.extend(res)
             p.day_params = json.dumps(day_params)
->>>>>>> trad99
+
 
     def get_params(self):
         return json.loads(self.params)
@@ -155,19 +145,14 @@ class Player(BasePlayer):
     """In production we may not need theses two fields, but it is still useful to have them
     as natural limits after which the player should proceed to the next trading day.
     """
-<<<<<<< HEAD
+
 
     start_time = djmodels.DateTimeField(null=True, blank=True)
     end_time = djmodels.DateTimeField(null=True, blank=True)
     payable_round = models.IntegerField()
-    gamified = models.BooleanField()
     day_params = models.LongStringField()
-=======
-    day_params = models.LongStringField()
-    start_time = djmodels.DateTimeField(null=True, blank=True)
-    end_time = djmodels.DateTimeField(null=True, blank=True)
-    payable_round = models.IntegerField()
->>>>>>> trad99
+
+
 
     def register_event(self, data):
         print('WE GET THE DATA', data)

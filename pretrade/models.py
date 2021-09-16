@@ -99,6 +99,7 @@ class Player(BasePlayer):
     def cq4_error_message(self, value):
         if value != 'Your trading profit and total work wages in a randomly selected round':
             return 'Wrong answer!'
+import json
 def general_params(player: Player):
     gamified = getattr(player, 'gamified',False)
     subsession=player.subsession
