@@ -9,7 +9,6 @@ from otree.api import (
     currency_range,
 )
 
-
 import yaml
 from csv import DictReader
 
@@ -37,9 +36,6 @@ class Subsession(BaseSubsession):
 
 class Group(BaseGroup):
     pass
-
-
-
 
 
 class Player(BasePlayer):
@@ -99,21 +95,29 @@ class Player(BasePlayer):
     def cq4_error_message(self, value):
         if value != 'Your trading profit and total work wages in a randomly selected round':
             return 'Wrong answer!'
-import json
-def general_params(player: Player):
 
-    subsession=player.subsession
+
+import json
+from pprint import pprint
+
+
+def general_params(player: Player):
+    subsession = player.subsession
     contents = urllib.request.urlopen(
         "http://raw.githubusercontent.com/chapkovski/trader_proj/main/data/params.yaml").read()
     c = yaml.load(contents, Loader=yaml.FullLoader)
     gps = c.copy()
     # gps = _general_params.copy() # UNCOMMENT FOR LOCAL testing
-
+    pprint(gps)
+    print('--------')
     numTicks = gps.get('dayLength') / gps.get('tickFrequency')
     _day_params = json.loads(getattr(player, 'day_params', "[]"))
     gamified_rounds = [i.get('round') for i in _day_params if i.get('gamified')]
-    print('GAMIFIED ROUDNS',gamified_rounds)
-    fee_low, fee_high= gps.get('wages')[:2]
+    if not gamified_rounds or len(gamified_rounds) < 2:
+        gamified_rounds = [2, 3]  # quick ugly fix
+    gps.pop('fee_low', None)  # a weird bug, think about it later
+    gps.pop('fee_high', None)
+    fee_low, fee_high = gps.get('wages')[:2]
     injected = dict(fee_low=fee_low,
                     fee_high=fee_high,
                     numTicks=numTicks,
@@ -122,7 +126,8 @@ def general_params(player: Player):
                     example_work_time_min=gps.get('dayLength') / 60 - gps.get('example_time_min'),
                     formatted_prob=gps.get('bonusProbabilityCoef') * 100,
                     example_formatted_prob=round(gps.get('example_time_min') / (gps.get('dayLength') / 60) * gps.get(
-                        'bonusProbabilityCoef'),2) * 100,
-                    day_params=_day_params
+                        'bonusProbabilityCoef'), 2) * 100,
+                    day_params=_day_params,
+                    gamified_rounds=f'{gamified_rounds[0]} and {gamified_rounds[1]}'  # think about it later, ugly AF
                     )
     return dict(**gps, **injected)
