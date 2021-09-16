@@ -119,8 +119,8 @@ def general_params(player: Player):
                     real_world_currency_per_point=subsession.session.config.get('real_world_currency_per_point'),
                     example_work_time_min=gps.get('dayLength') / 60 - gps.get('example_time_min'),
                     formatted_prob=gps.get('bonusProbabilityCoef') * 100,
-                    example_formatted_prob=(gps.get('example_time_min') / (gps.get('dayLength') / 60) * gps.get(
-                        'bonusProbabilityCoef')) * 100,
+                    example_formatted_prob=round(gps.get('example_time_min') / (gps.get('dayLength') / 60) * gps.get(
+                        'bonusProbabilityCoef'),2) * 100,
                     day_params=_day_params
                     )
     return dict(**gps, **injected)
