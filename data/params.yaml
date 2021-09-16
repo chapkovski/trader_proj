@@ -11,3 +11,9 @@ stock_B_name: XYZ  # ATTENTION: if you change this parameter DO NOT FORGET TO CH
 fee_low: 5   # ATTENTION: if you change this parameter DO NOT FORGET TO CHANGE this in day_params.
 fee_high: 10  # ATTENTION: if you change this parameter DO NOT FORGET TO CHANGE this in day_params.
 example_time_min: 1.5
+wages:
+  - 1
+  - 10
+training_wage: 5
+commission: 1
+num_days: 5

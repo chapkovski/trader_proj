@@ -9,9 +9,7 @@ from otree.api import (
     currency_range,
 )
 
-import json
-from django.db import models as djmodels
-from pprint import pprint
+
 import yaml
 from csv import DictReader
 
