@@ -107,8 +107,8 @@ def general_params(player: Player):
     numTicks = gps.get('dayLength') / gps.get('tickFrequency')
     _day_params = gps.get('day_params')
     gamified_rounds = [i.get('round') for i in _day_params if i.get('gamified')]
-    if not gamified_rounds or len(gamified_rounds) < 2:
-        gamified_rounds = [2, 3]  # quick ugly fix
+    # if not gamified_rounds or len(gamified_rounds) < 2:
+    #     gamified_rounds = [2, 3]  # quick ugly fix
     fee_low, fee_high = gps.get('wages')[:2]
     injected = dict(fee_low=fee_low,
                     fee_high=fee_high,
