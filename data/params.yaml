@@ -1,7 +1,7 @@
 endowment: 10
 dayLength: 15
 tickFrequency: 5
-bonusProbabilityCoef: 0.05
+bonusProbabilityCoef: 0.50
 numStocksInBonus: 1
 workDictLength: 10
 taskLength: 8
@@ -13,6 +13,6 @@ wages:
   - 1
   - 10
 training_wage: 5
-commission: 1
+commission: 0
 num_days: 5
 
