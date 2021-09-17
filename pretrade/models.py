@@ -108,8 +108,7 @@ def general_params(player: Player):
     c = yaml.load(contents, Loader=yaml.FullLoader)
     gps = c.copy()
     # gps = _general_params.copy() # UNCOMMENT FOR LOCAL testing
-    pprint(gps)
-    print('--------')
+
     numTicks = gps.get('dayLength') / gps.get('tickFrequency')
     _day_params = json.loads(getattr(player, 'day_params', "[]"))
     gamified_rounds = [i.get('round') for i in _day_params if i.get('gamified')]

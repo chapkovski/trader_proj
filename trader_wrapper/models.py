@@ -108,10 +108,8 @@ class Subsession(BaseSubsession):
             "http://raw.githubusercontent.com/chapkovski/trader_proj/main/data/params.yaml").read()
         c = yaml.load(contents, Loader=yaml.FullLoader)
         gps = c.copy()
-
         num_days = gps.get('num_days', 5)
-        pprint(num_days)
-        pprint('-000000000000')
+
         training_wage = gps.get('training_wage', 5)
         commission = gps.get('commission', 0)
         wages = gps.get('wages', [1, 10])
@@ -136,6 +134,8 @@ class Subsession(BaseSubsession):
                     j['round'] = i
                 day_params.extend(res)
             p.day_params = json.dumps(day_params)
+            gps['day_params'] = day_params
+            p.participant.vars['gps']  = gps
 
     def get_params(self):
         return json.loads(self.params)
