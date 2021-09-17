@@ -102,20 +102,13 @@ from pprint import pprint
 
 
 def general_params(player: Player):
-    subsession = player.subsession
-    contents = urllib.request.urlopen(
-        "http://raw.githubusercontent.com/chapkovski/trader_proj/main/data/params.yaml").read()
-    c = yaml.load(contents, Loader=yaml.FullLoader)
-    gps = c.copy()
-    # gps = _general_params.copy() # UNCOMMENT FOR LOCAL testing
-
+    subsession=player.subsession
+    gps = player.participant.vars.get('gps')
     numTicks = gps.get('dayLength') / gps.get('tickFrequency')
-    _day_params = json.loads(getattr(player, 'day_params', "[]"))
+    _day_params = gps.get('day_params')
     gamified_rounds = [i.get('round') for i in _day_params if i.get('gamified')]
     if not gamified_rounds or len(gamified_rounds) < 2:
         gamified_rounds = [2, 3]  # quick ugly fix
-    gps.pop('fee_low', None)  # a weird bug, think about it later
-    gps.pop('fee_high', None)
     fee_low, fee_high = gps.get('wages')[:2]
     injected = dict(fee_low=fee_low,
                     fee_high=fee_high,
@@ -129,4 +122,5 @@ def general_params(player: Player):
                     day_params=_day_params,
                     gamified_rounds=f'{gamified_rounds[0]} and {gamified_rounds[1]}'  # think about it later, ugly AF
                     )
-    return dict(**gps, **injected)
+    gps.update(injected)
+    return gps

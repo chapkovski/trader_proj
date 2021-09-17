@@ -16,11 +16,6 @@ class Trader(GeneralPage):
 
     def game_params(self):
         gp = general_params(self.player)
-        # FOR QUICK DEBUGGING
-        # gp['dayLength']=5
-        # gp['day_params'] =gp['day_params'] [0:1]
-        # pprint(gp)
-        # pprint('------')
         return gp
 
     def before_next_page(self):

@@ -11,13 +11,7 @@ default_app_seq = [
 ]
 SESSION_CONFIGS = [
 
-    dict(
-        name='pretrade',
-        display_name="Pre-trade (instructions, comprehension)",
-        num_demo_participants=2,
-        app_sequence=['pretrade'],
 
-    ),
 
     dict(
         name='traderonlhy',

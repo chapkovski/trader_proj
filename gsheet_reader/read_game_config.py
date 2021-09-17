@@ -20,8 +20,6 @@ def game_config():
     round_specific = sheet.worksheet('round_specific').get_all_records()
 
     # view the data
-    print(general_options)
-    print(round_specific)
 
 
 if __name__ == '__main__':

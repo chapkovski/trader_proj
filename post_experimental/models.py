@@ -56,7 +56,7 @@ class Subsession(BaseSubsession):
         for p in self.get_players():
             qs = Constants.fqs.copy()
             for i in qs:
-                pprint(i)
+
                 j = i.copy()
                 j['choices'] = json.dumps(i['choices'])
                 cqs.append(FinQ(owner=p, **j))
