@@ -70,7 +70,7 @@ INSTALLED_APPS = [
     'otree',
 
     'trader_wrapper',
-    'pretrade',
+    # 'pretrade',
     'django_countries'
 ]
 COUNTRIES_FIRST = ['US', 'GB']

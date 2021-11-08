@@ -80,7 +80,9 @@ class Constants(BaseConstants):
     num_stocks_in_bonus = 1  ## number of stocks provided as bonus
     num_ticks = int(day_length_in_seconds / tick_frequency_in_secs)
     endowment = 0
-    num_rounds = 1
+    crash_probabilities = [0.01, 0.02, 0.03, 0.05]
+    training_rounds = [1]
+    num_rounds = len(crash_probabilities)
 
     with open("data/day_params.csv") as csvfile:
         day_params = list(DictReader(csvfile))
@@ -102,40 +104,14 @@ class Subsession(BaseSubsession):
     params = models.LongStringField()
 
     def creating_session(self):
-        orders = [[True, False], [False, True]]
-        cyorders = cycle(orders)
-        contents = urllib.request.urlopen(
-            "http://raw.githubusercontent.com/chapkovski/trader_proj/main/data/params.yaml").read()
-        c = yaml.load(contents, Loader=yaml.FullLoader)
-        gps = c.copy()
-        num_days = gps.get('num_days', 5)
-
-        training_wage = gps.get('training_wage', 5)
-        commission = gps.get('commission', 0)
-        wages = gps.get('wages', [1, 10])
-        treatment_size = int((num_days - 1) / 2)
-        assert num_days % 2 == 1, 'Number of trading days should be an odd number'
-        assert num_days == 1 or treatment_size == len(
-            wages), 'Please check the length of wages parameter - it should contain the wages' \
-                    ' for each trading day'
+        for p in self.session.get_participants():
+            lb = max(Constants.training_rounds)
+            p.vars['payable_round'] = random.randint(lb + 1, Constants.num_rounds)
 
         for p in self.get_players():
-            day_params = [dict(round=1, gamified=True, wage=training_wage, commission=commission)]
-            if treatment_size > 1:
-                treatment_chunks = [[False] * treatment_size, [True] * treatment_size]
-                random.shuffle(treatment_chunks)
-
-                treatment_chunks = flatten(treatment_chunks)
-                treatment_chunks = treatment_chunks
-                wages_chunks = flatten([random.sample(wages, len(wages))] * 2)
-                res = [dict(wage=wage, gamified=gamified, commission=commission) for wage, gamified in
-                       zip(wages_chunks, treatment_chunks)]
-                for i, j in enumerate(res, start=2):
-                    j['round'] = i
-                day_params.extend(res)
-            p.day_params = json.dumps(day_params)
-            gps['day_params'] = day_params
-            p.participant.vars['gps']  = gps
+            p.payable_round = p.participant.vars['payable_round'] == p.round_number
+            p.training = p.round_number in Constants.training_rounds
+            p.crash_probability = Constants.crash_probabilities[self.round_number - 1]
 
     def get_params(self):
         return json.loads(self.params)
@@ -150,9 +126,16 @@ class Player(BasePlayer):
     as natural limits after which the player should proceed to the next trading day.
     """
 
+    def formatted_prob(self):
+        return f"{self.crash_probability:.0%}"
+
+    gamified = models.BooleanField(initial=False)
+    exit_price = models.FloatField()
+    training = models.BooleanField()
+    crash_probability = models.FloatField()
     start_time = djmodels.DateTimeField(null=True, blank=True)
     end_time = djmodels.DateTimeField(null=True, blank=True)
-    payable_round = models.IntegerField()
+    payable_round = models.BooleanField()
     day_params = models.LongStringField()
 
     def register_event(self, data):
@@ -174,19 +157,8 @@ class Player(BasePlayer):
             self.id_in_group: dict(timestamp=timestamp.strftime('%m_%d_%Y_%H_%M_%S'), action='getServerConfirmation')}
 
     def set_payoffs(self):
-        day_params = general_params(player=self).get('day_params')
-
-        num_rounds = len(day_params)
-
-        if num_rounds > 1:
-            self.payable_round = random.randint(2, num_rounds)
-        else:
-            self.payable_round = 1  ## it's an ugly fix for debugging only.
-        last_event_in_payable_round = self.events.filter(round_number=self.payable_round,
-                                                         balance__isnull=False).latest()
-        self.payoff = last_event_in_payable_round.balance
-        self.participant.vars['chosen_round'] = self.payable_round
-        self.participant.vars['trading_payoff'] = self.payoff
+        if self.payable_round:
+            self.payoff = self.exit_price
 
 
 class Event(djmodels.Model):

@@ -102,25 +102,4 @@ from pprint import pprint
 
 
 def general_params(player: Player):
-    subsession=player.subsession
-    gps = player.participant.vars.get('gps')
-    numTicks = gps.get('dayLength') / gps.get('tickFrequency')
-    _day_params = gps.get('day_params')
-    gamified_rounds = [i.get('round') for i in _day_params if i.get('gamified')]
-    # if not gamified_rounds or len(gamified_rounds) < 2:
-    #     gamified_rounds = [2, 3]  # quick ugly fix
-    fee_low, fee_high = gps.get('wages')[:2]
-    injected = dict(fee_low=fee_low,
-                    fee_high=fee_high,
-                    numTicks=numTicks,
-                    day_length_in_min=gps.get('dayLength') / 60,
-                    real_world_currency_per_point=subsession.session.config.get('real_world_currency_per_point'),
-                    example_work_time_min=gps.get('dayLength') / 60 - gps.get('example_time_min'),
-                    formatted_prob=gps.get('bonusProbabilityCoef') * 100,
-                    example_formatted_prob=round(gps.get('example_time_min') / (gps.get('dayLength') / 60) * gps.get(
-                        'bonusProbabilityCoef'), 2) * 100,
-                    day_params=_day_params,
-                    gamified_rounds=f'{gamified_rounds[0]} and {gamified_rounds[1]}'  # think about it later, ugly AF
-                    )
-    gps.update(injected)
-    return gps
+    pass

@@ -10,19 +10,21 @@ from pretrade.pages import GeneralPage
 
 
 
-from pprint import pprint
+
+class AnnounceTrader(GeneralPage):
+    pass
+
 class Trader(GeneralPage):
     live_method = 'register_event'
+    form_model = 'player'
+    form_fields = ['exit_price']
 
-    def game_params(self):
-        gp = general_params(self.player)
-        return gp
 
     def before_next_page(self):
         self.player.set_payoffs()
 
 
 page_sequence = [
-
+    AnnounceTrader,
     Trader,
 ]
