@@ -120,7 +120,7 @@ class Subsession(BaseSubsession):
                     ' for each trading day'
 
         for p in self.get_players():
-            day_params = [dict(round=1, gamified=False, wage=training_wage, commission=commission)]
+            day_params = [dict(round=1, gamified=True, wage=training_wage, commission=commission)]
             if treatment_size > 1:
                 treatment_chunks = [[False] * treatment_size, [True] * treatment_size]
                 random.shuffle(treatment_chunks)
