@@ -6,7 +6,7 @@ TIME_ZONE = 'UTC'
 default_app_seq = [
     # 'pretrade',
     'trader_wrapper',
-    'post_experimental'
+    # 'post_experimental'
 
 ]
 SESSION_CONFIGS = [
@@ -68,7 +68,7 @@ SECRET_KEY = 'y(8c37tkwqf#m$gg9=z*54k&jojh6ddhlj75j4klo6evkkfwb%'
 # if an app is included in SESSION_CONFIGS, you don't need to list it here
 INSTALLED_APPS = [
     'otree',
-    'webpack_loader',
+
     'trader_wrapper',
     'pretrade',
     'django_countries'
@@ -77,13 +77,3 @@ COUNTRIES_FIRST = ['US', 'GB']
 COUNTRIES_FIRST_BREAK = '-------'
 COUNTRIES_FIRST_REPEAT = True
 
-WEBPACK_LOADER = {
-    'DEFAULT': {
-        # 'CACHE': not DEBUG,
-        'BUNDLE_DIR_NAME': 'vue/',  # must end with slash
-        'STATS_FILE': os.path.join(BASE_DIR, 'traderfront', 'webpack-stats.json'),
-        'POLL_INTERVAL': 0.3,
-        'TIMEOUT': None,
-        'IGNORE': [r'.+\.hot-update.js', r'.+\.map']
-    }
-}
