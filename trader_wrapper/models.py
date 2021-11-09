@@ -53,7 +53,7 @@ class Subsession(BaseSubsession):
             params = get_game_params(settings.URL_TO_READ)
             params['game_rounds'] = Constants.num_rounds
             params['round_length'] = params['tick_frequency']*params['max_length']
-
+            params['exchange_rate'] = self.session.config.get('real_world_currency_per_point')
             round_params = get_round_params(settings.ROUND_URL_TO_READ)
             training_rounds = [k for k, v in round_params.items() if v.get('training')]
             self.session.vars['game_params'] = params
