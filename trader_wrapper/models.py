@@ -52,14 +52,18 @@ class Subsession(BaseSubsession):
         if self.round_number == 1:
             params = get_game_params(settings.URL_TO_READ)
             params['game_rounds'] = Constants.num_rounds
-            params['round_length'] = params['tick_frequency']*params['max_length']
+
             params['exchange_rate'] = self.session.config.get('real_world_currency_per_point')
             round_params = get_round_params(settings.ROUND_URL_TO_READ)
+            print(round_params)
+            max_tick_frequency = max(round_params.values(), key=lambda x: x.get('tick_frequency')).get('tick_frequency')
+            params['round_length'] = max_tick_frequency * params['max_length']
             training_rounds = [k for k, v in round_params.items() if v.get('training')]
             self.session.vars['game_params'] = params
 
             self.session.vars['training_rounds'] = training_rounds
             self.session.vars['round_params'] = round_params
+
             assert (Constants.num_rounds - len(
                 training_rounds)) % 2 == 0, 'Number of payble rounds should be even (so we can split them into gamified and nongamified'
             half = int((Constants.num_rounds - len(training_rounds)) / 2)
