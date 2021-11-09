@@ -76,6 +76,7 @@ class Subsession(BaseSubsession):
         for k, v in self.session.vars['game_params'].items():
             if hasattr(self, k):
                 setattr(self, k, v)
+        self.tick_frequency =  self.session.vars['round_params'][self.round_number].get('tick_frequency')
         for p in self.get_players():
             p.payable_round = p.participant.vars['payable_round'] == p.round_number
             p.training = p.round_number in self.session.vars['training_rounds']
