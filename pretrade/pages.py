@@ -4,7 +4,8 @@ from ._builtin import Page, WaitPage
 
 
 class GeneralPage(Page):
-    pass
+    def vars_for_template(self):
+        return dict(gps=self.session.vars['game_params'])
 
 class CQPage(GeneralPage):
     form_model = 'player'
