@@ -8,7 +8,8 @@ from otree.api import (
     Currency as c,
     currency_range,
 )
-
+import urllib.request
+from django.conf import settings
 import yaml
 from csv import DictReader
 
@@ -17,17 +18,16 @@ author = 'Philipp Chapkovski, HSE Moscow, chapkovski@gmail.com'
 doc = """
 Instructions, comprehension check for trader
 """
-with open(r'./data/params.yaml') as file:
-    _general_params = yaml.load(file, Loader=yaml.FullLoader)
-with open("data/day_params.csv") as csvfile:
-    _day_params = list(DictReader(csvfile))
-import urllib.request
+
 
 
 class Constants(BaseConstants):
     name_in_url = 'pretrade'
     players_per_group = None
     num_rounds = 1
+
+
+
 
 
 class Subsession(BaseSubsession):
@@ -39,7 +39,6 @@ class Group(BaseGroup):
 
 
 class Player(BasePlayer):
-
     cq1 = models.StringField(
         label="If you do not sell the stock and the price crashes, you receive:",
         choices=["Zero",
@@ -51,11 +50,11 @@ class Player(BasePlayer):
 
     cq2 = models.StringField(
         label="If you do not sell the asset and the price does not crash, you receive",
-    choices = ["Zero",
-               "The stock price at the end of the round",
-               "The stock price at the beginning of the round",
-               ],
-              widget = widgets.RadioSelect
+        choices=["Zero",
+                 "The stock price at the end of the round",
+                 "The stock price at the beginning of the round",
+                 ],
+        widget=widgets.RadioSelect
     )
 
     cq3 = models.StringField(
@@ -91,6 +90,3 @@ class Player(BasePlayer):
     def cq4_error_message(self, value):
         if value != 'Your payoff in a randomly selected round and your correct answers in the post-experimental quiz':
             return 'Wrong answer!'
-
-
-

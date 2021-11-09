@@ -8,6 +8,7 @@ from otree.api import (
     Currency as c,
     currency_range,
 )
+from settings import get_game_params, get_round_params
 from otree.models import Session
 import random
 from django.db import models as djmodels
@@ -17,9 +18,11 @@ from enum import Enum
 from itertools import cycle
 import os
 import csv
-from .config import Params
+
 import json
 from csv import DictReader
+import requests
+from django.conf import settings
 
 author = 'Philipp Chapkovski, HSE-Moscow'
 
@@ -28,52 +31,11 @@ Backend for trading platform
 """
 
 
-class UpdSession(Session):
-    class Meta:
-        proxy = True
-
-    def export_data(self):
-        # TODO: this function should  write files to S3 (preferrably)
-        origin = Session.objects.get(code=self.code).config
-
-        ps = Player.objects.filter(session__code=self.code)
-        export_path = datetime.now().strftime('__temp_mock_%m_%d_%Y')
-
-        os.makedirs(export_path, exist_ok=True)
-        with open(f'{export_path}/{origin.get("name")}_{self.code}.tsv', "w") as file1:
-            writes = csv.writer(file1, delimiter='\t', quoting=csv.QUOTE_ALL)
-            writes.writerows(custom_export(ps))
-
-
-class EventType(str, Enum):
-    transaction = 'transaction'
-    task = 'submit_task'
-    change_stock_tab = 'change_stock_tab'
-    change_tab = 'change_tab'
-
-
-class SourceType(str, Enum):
-    inner = 'inner'
-    client = 'client'
-
-
-class Direction(int, Enum):
-    buy = 1
-    sell = -1
-
-
-
-
 class Constants(BaseConstants):
     name_in_url = 'trader_wrapper'
     players_per_group = None
-    starting_price = Params.starting_price
-    crash_probabilities = Params.crash_probabilities
     training_rounds = [1]
-    num_rounds = len(crash_probabilities)
-
-    with open("data/day_params.csv") as csvfile:
-        day_params = list(DictReader(csvfile))
+    num_rounds = len(settings.ROUND_GAME_PARAMS.keys())
 
 
 def flatten(t):
@@ -81,30 +43,43 @@ def flatten(t):
 
 
 class Subsession(BaseSubsession):
-    params = models.LongStringField()
+    starting_price = models.FloatField()
+    tick_frequency = models.FloatField()
+    max_length = models.FloatField()
 
     def creating_session(self):
+
         if self.round_number == 1:
-            half = int((Constants.num_rounds - len(Constants.training_rounds)) / 2)
+            params = get_game_params(settings.URL_TO_READ)
+            params['game_rounds'] = Constants.num_rounds
+            params['round_length'] = params['tick_frequency']*params['max_length']
+
+            round_params = get_round_params(settings.ROUND_URL_TO_READ)
+            training_rounds = [k for k, v in round_params.items() if v.get('training')]
+            self.session.vars['game_params'] = params
+
+            self.session.vars['training_rounds'] = training_rounds
+            self.session.vars['round_params'] = round_params
+            assert (Constants.num_rounds - len(
+                training_rounds)) % 2 == 0, 'Number of payble rounds should be even (so we can split them into gamified and nongamified'
+            half = int((Constants.num_rounds - len(training_rounds)) / 2)
             treatment_order = [True] * half + [False] * half
             tcycle = cycle([-1, 1])
             for p in self.session.get_participants():
                 p.vars['treatments'] = treatment_order[::next(tcycle)]
                 lb = max(Constants.training_rounds)
                 p.vars['payable_round'] = random.randint(lb + 1, Constants.num_rounds)
-
+        for k, v in self.session.vars['game_params'].items():
+            if hasattr(self, k):
+                setattr(self, k, v)
         for p in self.get_players():
-
             p.payable_round = p.participant.vars['payable_round'] == p.round_number
-            p.training = p.round_number in Constants.training_rounds
+            p.training = p.round_number in self.session.vars['training_rounds']
             if p.training:
-                p.gamified= False
+                p.gamified = False
             else:
                 p.gamified = p.participant.vars['treatments'][self.round_number - len(Constants.training_rounds) - 1]
-            p.crash_probability = Constants.crash_probabilities[self.round_number - 1]
-
-    def get_params(self):
-        return json.loads(self.params)
+            p.crash_probability = self.session.vars['round_params'][self.round_number].get('crash_probability')
 
 
 class Group(BaseGroup):

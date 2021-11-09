@@ -1,11 +1,10 @@
 from otree.api import Currency as c, currency_range
 from ._builtin import Page, WaitPage
-from trader_wrapper.config import Params
+
 
 
 class GeneralPage(Page):
-    def vars_for_template(self):
-        return dict(gps=Params)
+    pass
 
 class CQPage(GeneralPage):
     form_model = 'player'

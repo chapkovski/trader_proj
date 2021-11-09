@@ -28,9 +28,9 @@
             {% include 'pretrade/includes/instructions.html' %}
         </div>
         <script>
-            window.starting_price = {{ gps.starting_price|json }};
-            window.tick_frequency = {{ gps.tick_frequency|json }};
-            window.max_length = {{ gps.max_length|json }};
+            window.starting_price = {{ subsession.starting_price|json }};
+            window.tick_frequency = {{ subsession.tick_frequency|json }};
+            window.max_length = {{ subsession.max_length|json }};
 
             window.gamified = {{ player.gamified|json }};
             window.training ={{ player.training|json }};
