@@ -16,9 +16,21 @@ class PandasExport(View):
     content_type = 'text/csv'
 
     def get(self, request, *args, **kwargs):
-        events = Event.objects.all().values('owner__participant__code', 'owner__session__code', 'owner__round_number',
-                                            'name', 'timestamp', 'body',
-                                            'owner__gamified', 'owner__crash_probability', 'owner__training'
+        events = Event.objects.all().values(
+            'owner__participant__code',
+            'owner__session__code',
+            'owner__round_number',
+                                            'name',
+            'timestamp',
+            'body',
+                                            'owner__gamified',
+            'owner__crash_probability',
+            'owner__training',
+            'owner__exit_price',
+            'owner__subsession__starting_price',
+            'owner__subsession__tick_frequency',
+            'owner__subsession__max_length',
+
                                             )
         df = pd.DataFrame(data=events)
         df['current_price'] = df['body'].apply(lambda x: json.loads(x).get('currentPrice'))
