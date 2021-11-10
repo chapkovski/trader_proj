@@ -1,7 +1,7 @@
 from os import environ
 import os
 import pandas as pd
-
+EXTENSION_APPS=['trader_wrapper']
 
 def get_game_params(url):
     df = pd.read_csv(url)
