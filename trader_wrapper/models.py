@@ -126,6 +126,9 @@ class Player(BasePlayer):
     def set_payoffs(self):
         if self.payable_round:
             self.payoff = self.exit_price
+            self.participant.vars['payable_round'] = self.round_number
+            self.participant.vars['trading_payoff'] = self.payoff
+
 
 
 class Event(djmodels.Model):
